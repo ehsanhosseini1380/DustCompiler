@@ -32,8 +32,17 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterClassDef(DustParser.ClassDefContext ctx) {
-        System.out.printf(("class "+ctx.CLASSNAME(0).getText() + "/ class parent: ").indent(indentPrinter.indentation) );
-        // class parents
+        StringBuilder parents = new StringBuilder();
+        parents.append("class ").append(ctx.CLASSNAME(0).getText()).append("/ class parent: ");
+        if(ctx.CLASSNAME(1) != null){
+            for (int i=1;i<ctx.CLASSNAME().size();i++){
+                parents.append(ctx.CLASSNAME(i).getText()).append(",");
+            }
+        }
+        else {
+            parents.append("object");
+        }
+        System.out.printf((parents + "{").indent(indentPrinter.indentation));
         System.out.println();
         indentPrinter.increaseIndentation();
     }
@@ -46,11 +55,6 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterClass_body(DustParser.Class_bodyContext ctx) {
-        if(ctx.varDec() != null)
-            System.out.printf(("field: " + ctx.varDec().ID().getText() + "/ type= " + ctx.varDec().getChild(0).getText()).indent(indentPrinter.indentation));
-
-        if(ctx.arrayDec() != null)
-            System.out.printf(("field: " + ctx.arrayDec().ID().getText() + "/ type= " + ctx.arrayDec().getChild(0).getText()).indent(indentPrinter.indentation));
     }
 
     @Override
@@ -59,7 +63,8 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterVarDec(DustParser.VarDecContext ctx) {
-
+        if(ctx.getParent().getRuleIndex() == 3 || (ctx.getParent().getParent().getRuleIndex() == 6 && ctx.getParent().getRuleIndex() == 9))
+            System.out.printf(("field: " + ctx.ID().getText() + "/ type= " + ctx.getChild(0).getText()).indent(indentPrinter.indentation));
     }
 
     @Override
@@ -69,6 +74,9 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterArrayDec(DustParser.ArrayDecContext ctx) {
+        if(ctx.getParent().getRuleIndex() == 3 || (ctx.getParent().getParent().getRuleIndex() == 6 && ctx.getParent().getRuleIndex() == 9))
+            System.out.printf(("field: " + ctx.ID().getText() + "/ type= " + ctx.getChild(0).getText()).indent(indentPrinter.indentation));
+
     }
 
     @Override
@@ -84,10 +92,6 @@ public class ProgramPrinter implements DustListener {
         if(ctx.CLASSNAME() != null) methodDec.append("/ " + "return type: ").append(ctx.CLASSNAME().getText());
         System.out.printf((methodDec+"{").indent(indentPrinter.indentation));
         indentPrinter.increaseIndentation();
-        if(ctx.statement().get(0).varDec() != null)
-            System.out.printf(("field: " + ctx.statement().get(0).varDec().ID().getText() + "/ type= " + ctx.statement().get(0).varDec().getChild(0).getText()).indent(indentPrinter.indentation));
-
-
     }
 
     @Override
@@ -166,32 +170,38 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterIf_statment(DustParser.If_statmentContext ctx) {
-
+        System.out.printf("nested statement{".indent(indentPrinter.indentation));
+        indentPrinter.increaseIndentation();
     }
 
     @Override
     public void exitIf_statment(DustParser.If_statmentContext ctx) {
-
+        indentPrinter.decreaseIndentation();
+        System.out.printf("}".indent(indentPrinter.indentation));
     }
 
     @Override
     public void enterWhile_statment(DustParser.While_statmentContext ctx) {
-
+        System.out.printf("nested statement{".indent(indentPrinter.indentation));
+        indentPrinter.increaseIndentation();
     }
 
     @Override
     public void exitWhile_statment(DustParser.While_statmentContext ctx) {
-
+        indentPrinter.decreaseIndentation();
+        System.out.printf("}".indent(indentPrinter.indentation));
     }
 
     @Override
     public void enterIf_else_statment(DustParser.If_else_statmentContext ctx) {
-
+        System.out.printf("nested statement{".indent(indentPrinter.indentation));
+        indentPrinter.increaseIndentation();
     }
 
     @Override
     public void exitIf_else_statment(DustParser.If_else_statmentContext ctx) {
-
+        indentPrinter.decreaseIndentation();
+        System.out.printf("}".indent(indentPrinter.indentation));
     }
 
     @Override
@@ -206,12 +216,14 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterFor_statment(DustParser.For_statmentContext ctx) {
-
+        System.out.printf("nested statement{".indent(indentPrinter.indentation));
+        indentPrinter.increaseIndentation();
     }
 
     @Override
     public void exitFor_statment(DustParser.For_statmentContext ctx) {
-
+        indentPrinter.decreaseIndentation();
+        System.out.printf("}".indent(indentPrinter.indentation));
     }
 
     @Override

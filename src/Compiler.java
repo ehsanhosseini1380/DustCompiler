@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {
-        CharStream stream = CharStreams.fromFileName("sample/input1.txt");
+        CharStream stream = CharStreams.fromFileName("sample/input2.txt");
         DustLexer lexer = new DustLexer(stream);
         TokenStream tokens = new CommonTokenStream(lexer);
         DustParser parser = new DustParser(tokens);
