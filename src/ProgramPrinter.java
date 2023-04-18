@@ -81,16 +81,21 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void exitArrayDec(DustParser.ArrayDecContext ctx) {
-
     }
 
     @Override
     public void enterMethodDec(DustParser.MethodDecContext ctx) {
         StringBuilder methodDec = new StringBuilder();
-        methodDec.append("class method: ").append(ctx.ID().getText());
-        if(ctx.TYPE() != null) methodDec.append("/ " + "return type: ").append(ctx.TYPE().getText());
-        if(ctx.CLASSNAME() != null) methodDec.append("/ " + "return type: ").append(ctx.CLASSNAME().getText());
-        System.out.printf((methodDec+"{").indent(indentPrinter.indentation));
+        if(!ctx.ID().getText().equals("main")) {
+            methodDec.append("class method: ").append(ctx.ID().getText());
+            if (ctx.TYPE() != null) methodDec.append("/ " + "return type: ").append(ctx.TYPE().getText());
+            if (ctx.CLASSNAME() != null) methodDec.append("/ " + "return type: ").append(ctx.CLASSNAME().getText());
+        }
+        else{
+            methodDec.append("main method");
+        }
+
+        System.out.printf((methodDec + "{").indent(indentPrinter.indentation));
         indentPrinter.increaseIndentation();
     }
 
@@ -118,7 +123,7 @@ public class ProgramPrinter implements DustListener {
         StringBuilder parameterList = new StringBuilder();
         parameterList.append("parameter list: [ ");
         for (int i = 0; i < ctx.varDec().size(); i++) {
-            parameterList.append(ctx.varDec(i).getChild(0).getText()).append(" ").append(ctx.varDec(i).getChild(1).getText());
+            parameterList.append(ctx.varDec(i).start.getText()).append(" ").append(ctx.varDec(i).stop.getText());
             if (ctx.varDec().size() > 1) parameterList.append(", ");
         }
         System.out.printf((parameterList+"]").indent(indentPrinter.indentation));
@@ -140,7 +145,6 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterReturn_statment(DustParser.Return_statmentContext ctx) {
-
     }
 
     @Override

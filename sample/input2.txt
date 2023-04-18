@@ -22,6 +22,9 @@ class Human(Nothing, Nothing2){
         return voice
     }
 
+    def void main(){
+    }
+
     def Voice speak(){
         Voice voice
         for i in hands{
