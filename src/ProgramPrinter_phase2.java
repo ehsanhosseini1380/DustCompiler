@@ -4,15 +4,19 @@ import gen.DustParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import java.util.Stack;
 public class ProgramPrinter_phase2 implements DustListener{
+    public final Stack<SymbolTable> scopes = new Stack<>();
     @Override
     public void enterProgram(DustParser.ProgramContext ctx) {
-
+        scopes.push(new SymbolTable("program", ctx.start.getLine(), null));
+        scopes.peek().toString();
     }
 
     @Override
     public void exitProgram(DustParser.ProgramContext ctx) {
-
+        scopes.pop();
+        System.out.println("=".repeat(30));
     }
 
     @Override
@@ -27,12 +31,27 @@ public class ProgramPrinter_phase2 implements DustListener{
 
     @Override
     public void enterClassDef(DustParser.ClassDefContext ctx) {
+        StringBuilder parents = new StringBuilder();
+        parents.append( "Class (name:" + ctx.CLASSNAME(0).getText()+") (parent:");
+        if(ctx.CLASSNAME(1) != null){
+            for (int i=1;i<ctx.CLASSNAME().size();i++){
+                parents.append(ctx.CLASSNAME(i).getText()).append(",");
+            }
+        }
+        else {
+            parents.append("object");
+        }
+        parents.append(")");
+        scopes.peek().insert("Class_"+ctx.CLASSNAME(0).getText(), parents.toString());
+        scopes.push(new SymbolTable(ctx.CLASSNAME(0).getText(), ctx.start.getLine(),scopes.peek()));
+        scopes.peek().toString();
 
     }
 
     @Override
     public void exitClassDef(DustParser.ClassDefContext ctx) {
-
+        scopes.pop();
+        System.out.println("=".repeat(30));
     }
 
     @Override
@@ -47,7 +66,8 @@ public class ProgramPrinter_phase2 implements DustListener{
 
     @Override
     public void enterVarDec(DustParser.VarDecContext ctx) {
-
+        scopes.peek().insert("Field_"+ctx.ID().getText(), "ClassField (name: "+ ctx.ID().getText()+") (type: "+ ctx.getChild(0).getText()+", isDefiend:");
+        System.out.println();
     }
 
     @Override
@@ -67,7 +87,6 @@ public class ProgramPrinter_phase2 implements DustListener{
 
     @Override
     public void enterMethodDec(DustParser.MethodDecContext ctx) {
-
     }
 
     @Override
