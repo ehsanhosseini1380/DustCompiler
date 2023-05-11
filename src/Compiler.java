@@ -21,7 +21,10 @@ public class Compiler {
 //        phase 1:
 //        ProgramPrinter listener = new ProgramPrinter();
 //        phase 2:
-        ProgramPrinter_phase2 listener=new ProgramPrinter_phase2();
+        ProgramPrinter listener=new ProgramPrinter();
         walker.walk(listener, tree);
+        for (var entry: SymbolTable.instances)
+            System.out.println(entry);
+
     }
 }

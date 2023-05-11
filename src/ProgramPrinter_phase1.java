@@ -4,35 +4,36 @@ import gen.DustParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import java.util.Stack;
-public class ProgramPrinter_phase2 implements DustListener{
-    public final Stack<SymbolTable> scopes = new Stack<>();
+public class ProgramPrinter_phase1 implements DustListener {
+
+    //instance creation of Printer for indention.
+    public Printer indentPrinter = new Printer();
+
     @Override
     public void enterProgram(DustParser.ProgramContext ctx) {
-        scopes.push(new SymbolTable("program", ctx.start.getLine(), null));
-        scopes.peek().toString();
+        System.out.println("program start{");
+        indentPrinter.increaseIndentation();
     }
 
     @Override
     public void exitProgram(DustParser.ProgramContext ctx) {
-        scopes.pop();
-        System.out.println("=".repeat(30));
+        indentPrinter.decreaseIndentation();
+        System.out.println("}");
     }
 
     @Override
     public void enterImportclass(DustParser.ImportclassContext ctx) {
-
+        System.out.printf(("import class: "+ ctx.CLASSNAME().getText()).indent(indentPrinter.indentation));
     }
 
     @Override
     public void exitImportclass(DustParser.ImportclassContext ctx) {
-
     }
 
     @Override
     public void enterClassDef(DustParser.ClassDefContext ctx) {
         StringBuilder parents = new StringBuilder();
-        parents.append( "Class (name:" + ctx.CLASSNAME(0).getText()+") (parent:");
+        parents.append("class ").append(ctx.CLASSNAME(0).getText()).append("/ class parent: ");
         if(ctx.CLASSNAME(1) != null){
             for (int i=1;i<ctx.CLASSNAME().size();i++){
                 parents.append(ctx.CLASSNAME(i).getText()).append(",");
@@ -41,33 +42,29 @@ public class ProgramPrinter_phase2 implements DustListener{
         else {
             parents.append("object");
         }
-        parents.append(")");
-        scopes.peek().insert("Class_"+ctx.CLASSNAME(0).getText(), parents.toString());
-        scopes.push(new SymbolTable(ctx.CLASSNAME(0).getText(), ctx.start.getLine(),scopes.peek()));
-        scopes.peek().toString();
-
+        System.out.printf((parents + "{").indent(indentPrinter.indentation));
+        System.out.println();
+        indentPrinter.increaseIndentation();
     }
 
     @Override
     public void exitClassDef(DustParser.ClassDefContext ctx) {
-        scopes.pop();
-        System.out.println("=".repeat(30));
+        indentPrinter.decreaseIndentation();
+        System.out.printf("}".indent(indentPrinter.indentation));
     }
 
     @Override
     public void enterClass_body(DustParser.Class_bodyContext ctx) {
-
     }
 
     @Override
     public void exitClass_body(DustParser.Class_bodyContext ctx) {
-
     }
 
     @Override
     public void enterVarDec(DustParser.VarDecContext ctx) {
-        scopes.peek().insert("Field_"+ctx.ID().getText(), "ClassField (name: "+ ctx.ID().getText()+") (type: "+ ctx.getChild(0).getText()+", isDefiend:");
-        System.out.println();
+        if(ctx.getParent().getRuleIndex() == 3 || (ctx.getParent().getParent().getRuleIndex() == 6 && ctx.getParent().getRuleIndex() == 9))
+            System.out.printf(("field: " + ctx.ID().getText() + "/ type= " + ctx.getChild(0).getText()).indent(indentPrinter.indentation));
     }
 
     @Override
@@ -77,41 +74,63 @@ public class ProgramPrinter_phase2 implements DustListener{
 
     @Override
     public void enterArrayDec(DustParser.ArrayDecContext ctx) {
+        if(ctx.getParent().getRuleIndex() == 3 || (ctx.getParent().getParent().getRuleIndex() == 6 && ctx.getParent().getRuleIndex() == 9))
+            System.out.printf(("field: " + ctx.ID().getText() + "/ type= " + ctx.getChild(0).getText()).indent(indentPrinter.indentation));
 
     }
 
     @Override
     public void exitArrayDec(DustParser.ArrayDecContext ctx) {
-
     }
 
     @Override
     public void enterMethodDec(DustParser.MethodDecContext ctx) {
+        StringBuilder methodDec = new StringBuilder();
+        if(!ctx.ID().getText().equals("main")) {
+            methodDec.append("class method: ").append(ctx.ID().getText());
+            if (ctx.TYPE() != null) methodDec.append("/ " + "return type: ").append(ctx.TYPE().getText());
+            if (ctx.CLASSNAME() != null) methodDec.append("/ " + "return type: ").append(ctx.CLASSNAME().getText());
+        }
+        else{
+            methodDec.append("main method");
+        }
+
+        System.out.printf((methodDec + "{").indent(indentPrinter.indentation));
+        indentPrinter.increaseIndentation();
     }
 
     @Override
     public void exitMethodDec(DustParser.MethodDecContext ctx) {
+        indentPrinter.decreaseIndentation();
+        System.out.printf("}".indent(indentPrinter.indentation));
 
     }
 
     @Override
     public void enterConstructor(DustParser.ConstructorContext ctx) {
-
+        System.out.printf(("class constructor: " + ctx.CLASSNAME().getText() + "{").indent(indentPrinter.indentation));
+        indentPrinter.increaseIndentation();
     }
 
     @Override
     public void exitConstructor(DustParser.ConstructorContext ctx) {
-
+        indentPrinter.decreaseIndentation();
+        System.out.printf("}".indent(indentPrinter.indentation));
     }
 
     @Override
     public void enterParameter(DustParser.ParameterContext ctx) {
-
+        StringBuilder parameterList = new StringBuilder();
+        parameterList.append("parameter list: [ ");
+        for (int i = 0; i < ctx.varDec().size(); i++) {
+            parameterList.append(ctx.varDec(i).start.getText()).append(" ").append(ctx.varDec(i).stop.getText());
+            if (ctx.varDec().size() > 1) parameterList.append(", ");
+        }
+        System.out.printf((parameterList+"]").indent(indentPrinter.indentation));
     }
 
     @Override
     public void exitParameter(DustParser.ParameterContext ctx) {
-
     }
 
     @Override
@@ -126,7 +145,6 @@ public class ProgramPrinter_phase2 implements DustListener{
 
     @Override
     public void enterReturn_statment(DustParser.Return_statmentContext ctx) {
-
     }
 
     @Override
@@ -156,32 +174,38 @@ public class ProgramPrinter_phase2 implements DustListener{
 
     @Override
     public void enterIf_statment(DustParser.If_statmentContext ctx) {
-
+        System.out.printf("nested statement{".indent(indentPrinter.indentation));
+        indentPrinter.increaseIndentation();
     }
 
     @Override
     public void exitIf_statment(DustParser.If_statmentContext ctx) {
-
+        indentPrinter.decreaseIndentation();
+        System.out.printf("}".indent(indentPrinter.indentation));
     }
 
     @Override
     public void enterWhile_statment(DustParser.While_statmentContext ctx) {
-
+        System.out.printf("nested statement{".indent(indentPrinter.indentation));
+        indentPrinter.increaseIndentation();
     }
 
     @Override
     public void exitWhile_statment(DustParser.While_statmentContext ctx) {
-
+        indentPrinter.decreaseIndentation();
+        System.out.printf("}".indent(indentPrinter.indentation));
     }
 
     @Override
     public void enterIf_else_statment(DustParser.If_else_statmentContext ctx) {
-
+        System.out.printf("nested statement{".indent(indentPrinter.indentation));
+        indentPrinter.increaseIndentation();
     }
 
     @Override
     public void exitIf_else_statment(DustParser.If_else_statmentContext ctx) {
-
+        indentPrinter.decreaseIndentation();
+        System.out.printf("}".indent(indentPrinter.indentation));
     }
 
     @Override
@@ -196,12 +220,14 @@ public class ProgramPrinter_phase2 implements DustListener{
 
     @Override
     public void enterFor_statment(DustParser.For_statmentContext ctx) {
-
+        System.out.printf("nested statement{".indent(indentPrinter.indentation));
+        indentPrinter.increaseIndentation();
     }
 
     @Override
     public void exitFor_statment(DustParser.For_statmentContext ctx) {
-
+        indentPrinter.decreaseIndentation();
+        System.out.printf("}".indent(indentPrinter.indentation));
     }
 
     @Override
@@ -295,11 +321,6 @@ public class ProgramPrinter_phase2 implements DustListener{
     }
 
     @Override
-    public void visitTerminal(TerminalNode terminalNode) {
-
-    }
-
-    @Override
     public void visitErrorNode(ErrorNode errorNode) {
 
     }
@@ -311,6 +332,11 @@ public class ProgramPrinter_phase2 implements DustListener{
 
     @Override
     public void exitEveryRule(ParserRuleContext parserRuleContext) {
+
+    }
+
+    @Override
+    public void visitTerminal(TerminalNode terminalNode) {
 
     }
 }

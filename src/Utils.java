@@ -13,13 +13,17 @@ public class Utils {
             notFound = (symbolTable.lookup("Field_"+id.getText())==null);
             symbolTable = symbolTable.parent;
         }
-        if(notFound)
-            System.out.printf("Error106 : in line [%d:%d] , Can not find Variable [%s]\n", id.getSymbol().getLine(), id.getSymbol().getCharPositionInLine()+1, id.getText());
     }
 
-    public static void detectUndeclaredClass(TerminalNode className){
-        if(!Boolean.parseBoolean(checkDataTypeIsDefined(className.getText()))){
-            System.out.printf("Error105 : in line [%d:%d] , Can not find Class [%s]\n", className.getSymbol().getLine(), className.getSymbol().getCharPositionInLine()+1, className.getText());
-        }
-    }
+
+//    public static boolean detectDuplicateDeclaration(String identifier, String fieldType, int line, int column,Stack<SymbolTable> scopes){
+//        if (scopes.peek().lookup(fieldType + "_" + identifier)!=null) {
+//            fieldType = fieldType.toLowerCase();
+//            int errorNo = (fieldType.equals("field")) ? 104 : 102;
+////            System.out.printf("Error%d : in line [%d:%d] , %s [%s] has been defined already\n", errorNo, line, column, fieldType, identifier);
+//
+//            return true;
+//        }
+//        return false;
+//    }
 }

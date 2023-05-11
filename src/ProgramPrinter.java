@@ -4,53 +4,68 @@ import gen.DustParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
-public class ProgramPrinter implements DustListener {
-
-    //instance creation of Printer for indention.
-    public Printer indentPrinter = new Printer();
-
+import java.util.Stack;
+public class ProgramPrinter implements DustListener{
+    public final Stack<SymbolTable> scopes = new Stack<>();
     @Override
     public void enterProgram(DustParser.ProgramContext ctx) {
-        System.out.println("program start{");
-        indentPrinter.increaseIndentation();
+        scopes.push(new SymbolTable("program", ctx.start.getLine(), null));
+        SymbolTable.root=scopes.peek();
     }
 
     @Override
     public void exitProgram(DustParser.ProgramContext ctx) {
-        indentPrinter.decreaseIndentation();
-        System.out.println("}");
+        scopes.pop();
     }
 
     @Override
     public void enterImportclass(DustParser.ImportclassContext ctx) {
-        System.out.printf(("import class: "+ ctx.CLASSNAME().getText()).indent(indentPrinter.indentation));
+        String identifier = ctx.CLASSNAME().toString();
+        String key = "import_" + identifier;
+        if(Boolean.parseBoolean(Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString()))){
+            int line = ctx.start.getLine();
+            int column = ctx.CLASSNAME().getSymbol().getCharPositionInLine();
+//            Utils.reportDuplicateClassError(identifier, line, column);
+            key = String.format("%s_%s_%s", identifier, line, column);
+        }
+        scopes.peek().insert(key, "import" + " (name: " + ctx.CLASSNAME() + ")");
     }
 
     @Override
     public void exitImportclass(DustParser.ImportclassContext ctx) {
+
     }
 
     @Override
     public void enterClassDef(DustParser.ClassDefContext ctx) {
         StringBuilder parents = new StringBuilder();
-        parents.append("class ").append(ctx.CLASSNAME(0).getText()).append("/ class parent: ");
         if(ctx.CLASSNAME(1) != null){
             for (int i=1;i<ctx.CLASSNAME().size();i++){
-                parents.append(ctx.CLASSNAME(i).getText()).append(",");
+//                Utils.detectUndeclaredClass(ctx.CLASSNAME(i));
+                parents.append(ctx.CLASSNAME(i)).append(",");
             }
         }
         else {
             parents.append("object");
         }
-        System.out.printf((parents + "{").indent(indentPrinter.indentation));
-        System.out.println();
-        indentPrinter.increaseIndentation();
+        parents.deleteCharAt(parents.length()-1);
+
+        String identifier = ctx.CLASSNAME(0).toString();
+        String key = "class_"+identifier;
+        if(Boolean.parseBoolean(Utils.checkDataTypeIsDefined(identifier))){
+            int line = ctx.start.getLine();
+            int column = ctx.CLASSNAME(0).getSymbol().getCharPositionInLine();
+//            Utils.reportDuplicateClassError(identifier, line, column);
+            key = String.format("%s_%s_%s", identifier, line, column);
+        }
+        scopes.peek().insert(key, String.format("class (name: %s) (parent: %s)", identifier, parents));
+        SymbolTable newScope = new SymbolTable(identifier, ctx.start.getLine(), scopes.peek());
+        scopes.push(newScope);
     }
 
     @Override
     public void exitClassDef(DustParser.ClassDefContext ctx) {
-        indentPrinter.decreaseIndentation();
-        System.out.printf("}".indent(indentPrinter.indentation));
+        scopes.pop();
     }
 
     @Override
@@ -59,12 +74,36 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void exitClass_body(DustParser.Class_bodyContext ctx) {
+
     }
 
     @Override
     public void enterVarDec(DustParser.VarDecContext ctx) {
-        if(ctx.getParent().getRuleIndex() == 3 || (ctx.getParent().getParent().getRuleIndex() == 6 && ctx.getParent().getRuleIndex() == 9))
-            System.out.printf(("field: " + ctx.ID().getText() + "/ type= " + ctx.getChild(0).getText()).indent(indentPrinter.indentation));
+        String fieldType;
+        String identifier = ctx.ID().toString();
+        String dataType;
+        if (ctx.CLASSNAME()==null)
+            dataType = ctx.TYPE().toString()+", isDefined: True";
+        else{
+            dataType = "ClassType= "+ctx.CLASSNAME().toString()+", isDefined: "+ Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
+//            Utils.detectUndeclaredClass(ctx.CLASSNAME());
+        }
+
+        switch (ctx.parent.getRuleIndex()){
+            case 3: //class field
+                fieldType = "ClassField";
+                break;
+            case 19, 9: //assignment/method field
+                fieldType = "MethodField";
+                break;
+            default: return;
+        }
+
+        String key = "Field_"+identifier;
+//        if(Utils.detectDuplicateDeclaration(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1,scopes)){
+//            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
+//        }
+        scopes.peek().insert(key, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
     }
 
     @Override
@@ -74,63 +113,131 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterArrayDec(DustParser.ArrayDecContext ctx) {
-        if(ctx.getParent().getRuleIndex() == 3 || (ctx.getParent().getParent().getRuleIndex() == 6 && ctx.getParent().getRuleIndex() == 9))
-            System.out.printf(("field: " + ctx.ID().getText() + "/ type= " + ctx.getChild(0).getText()).indent(indentPrinter.indentation));
+        String dataType;
+        String identifier = ctx.ID().toString();
+        switch (ctx.parent.getRuleIndex()) {
+            case 3: //class_body
+                if (ctx.CLASSNAME()==null)
+                    dataType = ctx.TYPE().toString()+", isDefined: True";
+                else{
+                    dataType = ctx.CLASSNAME().toString()+", isDefined: "+ Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
+//                    Utils.detectUndeclaredClass(ctx.CLASSNAME());
+                }
+                break;
+            default: return;
+        }
 
+        String key = "Field_"+identifier;
+//        if(Utils.detectDuplicateDeclaration(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
+//            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
+//        }
+        scopes.peek().insert(key, String.format("ClassArrayField (name: %s) (type: [%s])", ctx.ID().toString(), dataType));
     }
 
     @Override
     public void exitArrayDec(DustParser.ArrayDecContext ctx) {
+
     }
 
     @Override
     public void enterMethodDec(DustParser.MethodDecContext ctx) {
-        StringBuilder methodDec = new StringBuilder();
-        if(!ctx.ID().getText().equals("main")) {
-            methodDec.append("class method: ").append(ctx.ID().getText());
-            if (ctx.TYPE() != null) methodDec.append("/ " + "return type: ").append(ctx.TYPE().getText());
-            if (ctx.CLASSNAME() != null) methodDec.append("/ " + "return type: ").append(ctx.CLASSNAME().getText());
-        }
-        else{
-            methodDec.append("main method");
+        SymbolTable newScope = new SymbolTable(ctx.ID().toString(), ctx.start.getLine(), scopes.peek());
+
+        String returnType = "void";
+        String identifier = ctx.ID().toString();
+        if(ctx.TYPE() != null)
+            returnType = ctx.TYPE().toString();
+        else if(ctx.CLASSNAME() != null) {
+            returnType = "class type= " + ctx.CLASSNAME().toString();
+//            Utils.detectUndeclaredClass(ctx.CLASSNAME());
         }
 
-        System.out.printf((methodDec + "{").indent(indentPrinter.indentation));
-        indentPrinter.increaseIndentation();
+        StringBuilder parameterList = new StringBuilder();
+        //copy az phase 1
+        if(ctx.parameter().size() != 0){
+            int index = 0;
+            parameterList.append("[parameter list: ");
+            for (var entry: ctx.parameter(0).varDec()){
+                index++;
+                String dataType;
+                String fullDataType;
+                if(entry.CLASSNAME() == null) {
+                    dataType = fullDataType = entry.TYPE().toString()+", isDefined: True";
+                }
+                else {
+                    dataType = entry.CLASSNAME().toString();
+                    fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
+                }
+
+                newScope.insert("Field_"+entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
+                parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
+            }
+            parameterList.deleteCharAt(parameterList.length()-1).append(']');
+        }
+
+        String key = "Method_"+identifier;
+//        if(Utils.detectDuplicateDeclaration(identifier, "Method", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
+//            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
+//        }
+
+        scopes.peek().insert(key, String.format("Method (name: %s) (return type: [%s] %s)", ctx.ID(), returnType, parameterList));
+        scopes.push(newScope);
     }
 
     @Override
     public void exitMethodDec(DustParser.MethodDecContext ctx) {
-        indentPrinter.decreaseIndentation();
-        System.out.printf("}".indent(indentPrinter.indentation));
-
+        scopes.pop();
     }
 
     @Override
     public void enterConstructor(DustParser.ConstructorContext ctx) {
-        System.out.printf(("class constructor: " + ctx.CLASSNAME().getText() + "{").indent(indentPrinter.indentation));
-        indentPrinter.increaseIndentation();
+        SymbolTable newScope = new SymbolTable(ctx.CLASSNAME().toString(), ctx.start.getLine(), scopes.peek());
+
+        String identifier = ctx.CLASSNAME().toString();
+        StringBuilder parameterList = new StringBuilder();
+        if(ctx.parameter().size() != 0){
+            int index = 0;
+            parameterList.append("[parameter list: ");
+            for (var entry: ctx.parameter(0).varDec()){
+                index++;
+                String dataType;
+                String fullDataType;
+                if(entry.CLASSNAME() == null) {
+                    dataType = fullDataType = entry.TYPE().toString()+", isDefined: True";
+                }
+                else {
+                    dataType = entry.CLASSNAME().toString();
+                    fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
+                }
+
+                newScope.insert("Field_"+entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
+                parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
+            }
+            parameterList.deleteCharAt(parameterList.length()-1).append(']');
+        }
+
+        String key = "Constructor_"+identifier;
+//        if(Utils.detectDuplicateDeclaration(identifier, "Constructor", ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1, scopes)){
+//            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1);
+//        }
+
+        scopes.peek().insert(key, String.format("Constructor (name: %s) [parameter list: %s]", ctx.CLASSNAME(), parameterList));
+        scopes.push(newScope);
     }
 
     @Override
     public void exitConstructor(DustParser.ConstructorContext ctx) {
-        indentPrinter.decreaseIndentation();
-        System.out.printf("}".indent(indentPrinter.indentation));
+        scopes.pop();
     }
 
     @Override
     public void enterParameter(DustParser.ParameterContext ctx) {
-        StringBuilder parameterList = new StringBuilder();
-        parameterList.append("parameter list: [ ");
-        for (int i = 0; i < ctx.varDec().size(); i++) {
-            parameterList.append(ctx.varDec(i).start.getText()).append(" ").append(ctx.varDec(i).stop.getText());
-            if (ctx.varDec().size() > 1) parameterList.append(", ");
-        }
-        System.out.printf((parameterList+"]").indent(indentPrinter.indentation));
+
     }
 
     @Override
     public void exitParameter(DustParser.ParameterContext ctx) {
+
     }
 
     @Override
@@ -145,6 +252,7 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterReturn_statment(DustParser.Return_statmentContext ctx) {
+
     }
 
     @Override
@@ -174,38 +282,35 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterIf_statment(DustParser.If_statmentContext ctx) {
-        System.out.printf("nested statement{".indent(indentPrinter.indentation));
-        indentPrinter.increaseIndentation();
+        SymbolTable newScope = new SymbolTable("if", ctx.start.getLine(), scopes.peek());
+        scopes.push(newScope);
     }
 
     @Override
     public void exitIf_statment(DustParser.If_statmentContext ctx) {
-        indentPrinter.decreaseIndentation();
-        System.out.printf("}".indent(indentPrinter.indentation));
+        scopes.pop();
     }
 
     @Override
     public void enterWhile_statment(DustParser.While_statmentContext ctx) {
-        System.out.printf("nested statement{".indent(indentPrinter.indentation));
-        indentPrinter.increaseIndentation();
+        SymbolTable newScope = new SymbolTable("while", ctx.start.getLine(), scopes.peek());
+        scopes.push(newScope);
     }
 
     @Override
     public void exitWhile_statment(DustParser.While_statmentContext ctx) {
-        indentPrinter.decreaseIndentation();
-        System.out.printf("}".indent(indentPrinter.indentation));
+        scopes.pop();
     }
 
     @Override
     public void enterIf_else_statment(DustParser.If_else_statmentContext ctx) {
-        System.out.printf("nested statement{".indent(indentPrinter.indentation));
-        indentPrinter.increaseIndentation();
+        SymbolTable newScope = new SymbolTable("if-else", ctx.start.getLine(), scopes.peek());
+        scopes.push(newScope);
     }
 
     @Override
     public void exitIf_else_statment(DustParser.If_else_statmentContext ctx) {
-        indentPrinter.decreaseIndentation();
-        System.out.printf("}".indent(indentPrinter.indentation));
+        scopes.pop();
     }
 
     @Override
@@ -220,14 +325,16 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterFor_statment(DustParser.For_statmentContext ctx) {
-        System.out.printf("nested statement{".indent(indentPrinter.indentation));
-        indentPrinter.increaseIndentation();
+        for (TerminalNode entry: ctx.ID())
+            Utils.detectUndeclaredVariable(entry,scopes);
+
+        SymbolTable newScope = new SymbolTable("for", ctx.start.getLine(), scopes.peek());
+        scopes.push(newScope);
     }
 
     @Override
     public void exitFor_statment(DustParser.For_statmentContext ctx) {
-        indentPrinter.decreaseIndentation();
-        System.out.printf("}".indent(indentPrinter.indentation));
+
     }
 
     @Override
@@ -252,7 +359,8 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterExp(DustParser.ExpContext ctx) {
-
+        if(ctx.ID()!=null)
+            Utils.detectUndeclaredVariable(ctx.ID(),scopes);
     }
 
     @Override
@@ -262,7 +370,8 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterPrefixexp(DustParser.PrefixexpContext ctx) {
-
+        if(ctx.ID()!=null)
+            Utils.detectUndeclaredVariable(ctx.ID(),scopes);
     }
 
     @Override
@@ -321,6 +430,11 @@ public class ProgramPrinter implements DustListener {
     }
 
     @Override
+    public void visitTerminal(TerminalNode terminalNode) {
+
+    }
+
+    @Override
     public void visitErrorNode(ErrorNode errorNode) {
 
     }
@@ -332,11 +446,6 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void exitEveryRule(ParserRuleContext parserRuleContext) {
-
-    }
-
-    @Override
-    public void visitTerminal(TerminalNode terminalNode) {
 
     }
 }
