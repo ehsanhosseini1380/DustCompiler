@@ -25,7 +25,6 @@ public class ProgramPrinter implements DustListener{
         if(Boolean.parseBoolean(Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString()))){
             int line = ctx.start.getLine();
             int column = ctx.CLASSNAME().getSymbol().getCharPositionInLine();
-//            Utils.reportDuplicateClassError(identifier, line, column);
             key = String.format("%s_%s_%s", identifier, line, column);
         }
         scopes.peek().insert(key, "import" + " (name: " + ctx.CLASSNAME() + ")");
@@ -41,7 +40,6 @@ public class ProgramPrinter implements DustListener{
         StringBuilder parents = new StringBuilder();
         if(ctx.CLASSNAME(1) != null){
             for (int i=1;i<ctx.CLASSNAME().size();i++){
-//                Utils.detectUndeclaredClass(ctx.CLASSNAME(i));
                 parents.append(ctx.CLASSNAME(i)).append(",");
             }
         }
@@ -55,7 +53,6 @@ public class ProgramPrinter implements DustListener{
         if(Boolean.parseBoolean(Utils.checkDataTypeIsDefined(identifier))){
             int line = ctx.start.getLine();
             int column = ctx.CLASSNAME(0).getSymbol().getCharPositionInLine();
-//            Utils.reportDuplicateClassError(identifier, line, column);
             key = String.format("%s_%s_%s", identifier, line, column);
         }
         scopes.peek().insert(key, String.format("class (name: %s) (parent: %s)", identifier, parents));
@@ -84,25 +81,19 @@ public class ProgramPrinter implements DustListener{
         String dataType;
         if (ctx.CLASSNAME()==null)
             dataType = ctx.TYPE().toString()+", isDefined: True";
-        else{
-            dataType = "ClassType= "+ctx.CLASSNAME().toString()+", isDefined: "+ Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
-//            Utils.detectUndeclaredClass(ctx.CLASSNAME());
+        else {
+            dataType = "ClassType= " + ctx.CLASSNAME().toString() + ", isDefined: " + Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
         }
-
         switch (ctx.parent.getRuleIndex()){
-            case 3: //class field
+            case 3:
                 fieldType = "ClassField";
                 break;
-            case 19, 9: //assignment/method field
+            case 19, 9:
                 fieldType = "MethodField";
                 break;
             default: return;
         }
-
         String key = "Field_"+identifier;
-//        if(Utils.detectDuplicateDeclaration(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1,scopes)){
-//            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
-//        }
         scopes.peek().insert(key, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
     }
 
@@ -121,16 +112,11 @@ public class ProgramPrinter implements DustListener{
                     dataType = ctx.TYPE().toString()+", isDefined: True";
                 else{
                     dataType = ctx.CLASSNAME().toString()+", isDefined: "+ Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
-//                    Utils.detectUndeclaredClass(ctx.CLASSNAME());
                 }
                 break;
             default: return;
         }
-
         String key = "Field_"+identifier;
-//        if(Utils.detectDuplicateDeclaration(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
-//            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
-//        }
         scopes.peek().insert(key, String.format("ClassArrayField (name: %s) (type: [%s])", ctx.ID().toString(), dataType));
     }
 
@@ -142,14 +128,12 @@ public class ProgramPrinter implements DustListener{
     @Override
     public void enterMethodDec(DustParser.MethodDecContext ctx) {
         SymbolTable newScope = new SymbolTable(ctx.ID().toString(), ctx.start.getLine(), scopes.peek());
-
         String returnType = "void";
         String identifier = ctx.ID().toString();
         if(ctx.TYPE() != null)
             returnType = ctx.TYPE().toString();
         else if(ctx.CLASSNAME() != null) {
             returnType = "class type= " + ctx.CLASSNAME().toString();
-//            Utils.detectUndeclaredClass(ctx.CLASSNAME());
         }
 
         StringBuilder parameterList = new StringBuilder();
@@ -174,12 +158,7 @@ public class ProgramPrinter implements DustListener{
             }
             parameterList.deleteCharAt(parameterList.length()-1).append(']');
         }
-
         String key = "Method_"+identifier;
-//        if(Utils.detectDuplicateDeclaration(identifier, "Method", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
-//            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
-//        }
-
         scopes.peek().insert(key, String.format("Method (name: %s) (return type: [%s] %s)", ctx.ID(), returnType, parameterList));
         scopes.push(newScope);
     }
@@ -192,35 +171,28 @@ public class ProgramPrinter implements DustListener{
     @Override
     public void enterConstructor(DustParser.ConstructorContext ctx) {
         SymbolTable newScope = new SymbolTable(ctx.CLASSNAME().toString(), ctx.start.getLine(), scopes.peek());
-
         String identifier = ctx.CLASSNAME().toString();
         StringBuilder parameterList = new StringBuilder();
-        if(ctx.parameter().size() != 0){
+        if(ctx.parameter().size() != 0) {
             int index = 0;
             parameterList.append("[parameter list: ");
-            for (var entry: ctx.parameter(0).varDec()){
+            for (var entry : ctx.parameter(0).varDec()) {
                 index++;
                 String dataType;
                 String fullDataType;
-                if(entry.CLASSNAME() == null) {
-                    dataType = fullDataType = entry.TYPE().toString()+", isDefined: True";
-                }
-                else {
+                if (entry.CLASSNAME() == null) {
+                    dataType = fullDataType = entry.TYPE().toString() + ", isDefined: True";
+                } else {
                     dataType = entry.CLASSNAME().toString();
                     fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
                 }
 
-                newScope.insert("Field_"+entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
+                newScope.insert("Field_" + entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
                 parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
             }
-            parameterList.deleteCharAt(parameterList.length()-1).append(']');
+            parameterList.deleteCharAt(parameterList.length() - 1).append(']');
         }
-
         String key = "Constructor_"+identifier;
-//        if(Utils.detectDuplicateDeclaration(identifier, "Constructor", ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1, scopes)){
-//            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1);
-//        }
-
         scopes.peek().insert(key, String.format("Constructor (name: %s) [parameter list: %s]", ctx.CLASSNAME(), parameterList));
         scopes.push(newScope);
     }
