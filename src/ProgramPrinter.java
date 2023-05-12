@@ -45,11 +45,6 @@ public class ProgramPrinter implements DustListener{
 
         String identifier = ctx.CLASSNAME(0).toString();
         String key = "class_"+identifier;
-        if(Boolean.parseBoolean(Utils.checkDataTypeIsDefined(identifier))){
-            int line = ctx.start.getLine();
-            int column = ctx.CLASSNAME(0).getSymbol().getCharPositionInLine();
-            key = String.format("%s_%s_%s", identifier, line, column);
-        }
         scopes.peek().insert(key, String.format("class (name: %s) (parent: %s)", identifier, parents));
         SymbolTable newScope = new SymbolTable(identifier, ctx.start.getLine(), scopes.peek());
         scopes.push(newScope);
