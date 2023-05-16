@@ -6,8 +6,9 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {
@@ -23,8 +24,28 @@ public class Compiler {
 //        phase 2:
         ProgramPrinter listener=new ProgramPrinter();
         walker.walk(listener, tree);
-        for (var entry: SymbolTable.instances)
-            System.out.println(entry);
+//        for (var entry: SymbolTable.instances)
+//            System.out.println(entry);
+        printTreeBFS(SymbolTable.root);
 
+    }
+
+    public static void printTreeBFS(SymbolTable root) {
+        if (root == null)
+            return;
+
+        Queue<SymbolTable> queue = new LinkedList<>();
+        queue.offer(root);
+
+        while (!queue.isEmpty()) {
+            System.out.println(queue);
+
+            SymbolTable node = queue.poll();
+//            System.out.println(node);
+
+            for (SymbolTable child : node.children) {
+                queue.offer(child);
+            }
+        }
     }
 }

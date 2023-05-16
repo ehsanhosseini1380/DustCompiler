@@ -47,6 +47,7 @@ public class ProgramPrinter implements DustListener{
         String key = "class_"+identifier;
         scopes.peek().insert(key, String.format("class (name: %s) (parent: %s)", identifier, parents));
         SymbolTable newScope = new SymbolTable(identifier, ctx.start.getLine(), scopes.peek());
+        scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
 
@@ -117,6 +118,7 @@ public class ProgramPrinter implements DustListener{
 
     @Override
     public void enterMethodDec(DustParser.MethodDecContext ctx) {
+//        System.out.println("ID = " + ctx.ID().getText());
         SymbolTable newScope = new SymbolTable(ctx.ID().toString(), ctx.start.getLine(), scopes.peek());
         String returnType = "void";
         String identifier = ctx.ID().toString();
@@ -150,6 +152,7 @@ public class ProgramPrinter implements DustListener{
         }
         String key = "Method_"+identifier;
         scopes.peek().insert(key, String.format("Method (name: %s) (return type: [%s] %s)", ctx.ID(), returnType, parameterList));
+        scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
 
@@ -184,6 +187,7 @@ public class ProgramPrinter implements DustListener{
         }
         String key = "Constructor_"+identifier;
         scopes.peek().insert(key, String.format("Constructor (name: %s) [parameter list: %s]", ctx.CLASSNAME(), parameterList));
+        scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
 
@@ -245,6 +249,7 @@ public class ProgramPrinter implements DustListener{
     @Override
     public void enterIf_statment(DustParser.If_statmentContext ctx) {
         SymbolTable newScope = new SymbolTable("if", ctx.start.getLine(), scopes.peek());
+        scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
 
@@ -256,6 +261,7 @@ public class ProgramPrinter implements DustListener{
     @Override
     public void enterWhile_statment(DustParser.While_statmentContext ctx) {
         SymbolTable newScope = new SymbolTable("while", ctx.start.getLine(), scopes.peek());
+        scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
 
@@ -267,6 +273,7 @@ public class ProgramPrinter implements DustListener{
     @Override
     public void enterIf_else_statment(DustParser.If_else_statmentContext ctx) {
         SymbolTable newScope = new SymbolTable("if-else", ctx.start.getLine(), scopes.peek());
+        scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
 
@@ -291,6 +298,8 @@ public class ProgramPrinter implements DustListener{
             Utils.detectUndeclaredVariable(entry,scopes);
 
         SymbolTable newScope = new SymbolTable("for", ctx.start.getLine(), scopes.peek());
+//        System.out.println(scopes.peek());
+        scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
 

@@ -4,7 +4,7 @@ import java.util.LinkedList;
 public class SymbolTable {
     public static SymbolTable root;
     public SymbolTable parent;
-
+    public LinkedList<SymbolTable> children = new LinkedList<>();
     public String name;
     public int scopeNumber;
     public static LinkedList<SymbolTable> instances = new LinkedList<>();
