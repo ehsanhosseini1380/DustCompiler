@@ -305,7 +305,7 @@ public class ProgramPrinter implements DustListener{
 
     @Override
     public void exitFor_statment(DustParser.For_statmentContext ctx) {
-
+        scopes.pop();
     }
 
     @Override
