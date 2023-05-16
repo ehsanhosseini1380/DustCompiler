@@ -118,7 +118,6 @@ public class ProgramPrinter implements DustListener{
 
     @Override
     public void enterMethodDec(DustParser.MethodDecContext ctx) {
-//        System.out.println("ID = " + ctx.ID().getText());
         SymbolTable newScope = new SymbolTable(ctx.ID().toString(), ctx.start.getLine(), scopes.peek());
         String returnType = "void";
         String identifier = ctx.ID().toString();
@@ -298,7 +297,6 @@ public class ProgramPrinter implements DustListener{
             Utils.detectUndeclaredVariable(entry,scopes);
 
         SymbolTable newScope = new SymbolTable("for", ctx.start.getLine(), scopes.peek());
-//        System.out.println(scopes.peek());
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
