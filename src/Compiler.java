@@ -12,7 +12,7 @@ import java.util.Queue;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {
-        CharStream stream = CharStreams.fromFileName("sample/input2.txt");
+        CharStream stream = CharStreams.fromFileName("sample/input3.txt");
         DustLexer lexer = new DustLexer(stream);
         TokenStream tokens = new CommonTokenStream(lexer);
         DustParser parser = new DustParser(tokens);
@@ -24,8 +24,6 @@ public class Compiler {
 //        phase 2:
         ProgramPrinter listener=new ProgramPrinter();
         walker.walk(listener, tree);
-//        for (var entry: SymbolTable.instances)
-//            System.out.println(entry);
         printTreeBFS(SymbolTable.root);
 
     }
@@ -38,10 +36,8 @@ public class Compiler {
         queue.offer(root);
 
         while (!queue.isEmpty()) {
-            System.out.println(queue);
-
             SymbolTable node = queue.poll();
-//            System.out.println(node);
+            System.out.println(node);
 
             for (SymbolTable child : node.children) {
                 queue.offer(child);
