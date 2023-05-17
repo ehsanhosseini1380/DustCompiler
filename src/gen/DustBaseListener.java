@@ -1,4 +1,4 @@
-package gen;// Generated from /Users/ehsan/Desktop/Uni/term6/compiler/phase1/phase-1/grammar/Dust.g4 by ANTLR 4.12.0
+package gen;// Generated from E:/Codes/DustCompiler/grammar\Dust.g4 by ANTLR 4.12.0
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;

@@ -1,4 +1,4 @@
-package gen;// Generated from /Users/ehsan/Desktop/Uni/term6/compiler/phase1/phase-1/grammar/Dust.g4 by ANTLR 4.12.0
+package gen;// Generated from E:/Codes/DustCompiler/grammar\Dust.g4 by ANTLR 4.12.0
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -2017,7 +2017,7 @@ public class DustParser extends Parser {
 			setState(347);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,30,_ctx);
-			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
+			while ( _alt!=2 && _alt!= ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
 					_prevctx = _localctx;
@@ -2103,7 +2103,7 @@ public class DustParser extends Parser {
 			setState(365);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,32,_ctx);
-			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
+			while ( _alt!=2 && _alt!= ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
 					_prevctx = _localctx;

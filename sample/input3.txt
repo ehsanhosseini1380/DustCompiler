@@ -22,7 +22,7 @@ class Human(Nothing, Nothing2){
             Food newFood = Food()
             eat(newFood)
             if(calories > 2){
-            print("hellofood")
+            print("hello food")
             }
             self.isHungry = self.checkIsHungry()
         }
