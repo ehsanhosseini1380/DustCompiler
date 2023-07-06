@@ -1,11 +1,11 @@
+
 import gen.DustListener;
 import gen.DustParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import java.util.Stack;
-
-public class ProgramPrinter implements DustListener {
+public class ProgramPrinter_phase2 implements DustListener{
     public final Stack<SymbolTable> scopes = new Stack<>();
     @Override
     public void enterProgram(DustParser.ProgramContext ctx) {
@@ -75,12 +75,14 @@ public class ProgramPrinter implements DustListener {
         else {
             dataType = "ClassType= " + ctx.CLASSNAME().toString() + ", isDefined: " + Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
         }
-        switch (ctx.parent.getRuleIndex()) {
-            case 3 -> fieldType = "ClassField";
-            case 19, 9 -> fieldType = "MethodField";
-            default -> {
-                return;
-            }
+        switch (ctx.parent.getRuleIndex()){
+            case 3:
+                fieldType = "ClassField";
+                break;
+            case 19, 9:
+                fieldType = "MethodField";
+                break;
+            default: return;
         }
         String key = "Field_"+identifier;
         scopes.peek().insert(key, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
@@ -95,14 +97,15 @@ public class ProgramPrinter implements DustListener {
     public void enterArrayDec(DustParser.ArrayDecContext ctx) {
         String dataType;
         String identifier = ctx.ID().toString();
-        if (ctx.parent.getRuleIndex() == 3) {//class_body
-            if (ctx.CLASSNAME() == null)
-                dataType = ctx.TYPE().toString() + ", isDefined: True";
-            else {
-                dataType = ctx.CLASSNAME().toString() + ", isDefined: " + Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
-            }
-        } else {
-            return;
+        switch (ctx.parent.getRuleIndex()) {
+            case 3: //class_body
+                if (ctx.CLASSNAME()==null)
+                    dataType = ctx.TYPE().toString()+", isDefined: True";
+                else{
+                    dataType = ctx.CLASSNAME().toString()+", isDefined: "+ Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
+                }
+                break;
+            default: return;
         }
         String key = "Field_"+identifier;
         scopes.peek().insert(key, String.format("ClassArrayField (name: %s) (type: [%s])", ctx.ID().toString(), dataType));
