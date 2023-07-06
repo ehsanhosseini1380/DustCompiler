@@ -16,7 +16,7 @@ public class Utils {
     }
 
 
-    public static boolean detectDuplicateDeclaration(String identifier, String fieldType, int line, int column,Stack<SymbolTable> scopes){
+    public static boolean detectDuplicateDeclaration(String identifier, String fieldType, int line, int column, Stack<SymbolTable> scopes){
         if (scopes.peek().lookup(fieldType + "_" + identifier)!=null) {
             fieldType = fieldType.toLowerCase();
             int errorNo = (fieldType.equals("field")) ? 104 : 102;
@@ -34,7 +34,7 @@ public class Utils {
     }
 
 
-    public void reportDuplicateClassError(String identifier, int line, int column){
+    public static void reportDuplicateClassError(String identifier, int line, int column){
         System.out.printf("Error 100 : in line [%d:%d] , class [%s] has been defined already\n", line, column, identifier);
     }
 }
