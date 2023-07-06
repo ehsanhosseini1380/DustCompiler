@@ -19,7 +19,7 @@ if_else_statment :'if' '(' condition_list ')' '{' statement* '}' ('elif' '(' con
 print_statment : 'print' '(' (prefixexp | (TYPE | CLASSNAME) args | INTEGER |STRING | BOOL) ')' ;
 for_statment : 'for' ID 'in' ID '{' statement* '}'
 | 'for' ID 'in' 'range''('INTEGER (',' INTEGER)? (',' INTEGER)? ')' '{' statement* '}' ;
-method_call : ID ('.')? args ;
+method_call : ID ('.')? ID args ;
 assignment : prefixexp assignment_operators exp
 | varDec assignment_operators exp
 | arrayDec '=' (TYPE | CLASSNAME) args ('['INTEGER']') ;
@@ -37,8 +37,8 @@ BOOL: 'true'|'false';
 CLASSNAME: [A-Z] (LETTER|DIGIT)*;
 ID: [a-z]([A-Za-z_])*;
 LETTER: [A-Za-z];
-//STRING: '"' LETTER* '"';
-STRING: '"' (LETTER | DIGIT | WHITESPACE)* '"';
+STRING: '"' LETTER* '"';
+//STRING: '"' (LETTER | DIGIT | WHITESPACE)* '"';
 INTEGER: DIGIT+;
 FLOAT: (DIGIT)+ '.' (DIGIT)+;
 DIGIT: [0-9];
