@@ -27,7 +27,8 @@ public class Utils {
         return false;
     }
 
-    public void detectUndeclaredClass(TerminalNode className){
+
+    public static void detectUndeclaredClass(TerminalNode className){
         if(!Boolean.parseBoolean(checkDataTypeIsDefined(className.getText()))){
             System.out.printf("Error105 : in line [%d:%d] , Can not find Class [%s]\n", className.getSymbol().getLine(), className.getSymbol().getCharPositionInLine()+1, className.getText());
         }
