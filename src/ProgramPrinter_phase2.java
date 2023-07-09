@@ -22,7 +22,7 @@ public class ProgramPrinter_phase2 implements DustListener{
     public void enterImportclass(DustParser.ImportclassContext ctx) {
         String identifier = ctx.CLASSNAME().toString();
         String key = "import_" + identifier;
-        scopes.peek().insert(key, "import" + " (name: " + ctx.CLASSNAME() + ")");
+//        scopes.peek().insert(key, "import" + " (name: " + ctx.CLASSNAME() + ")");
     }
 
     @Override
@@ -45,7 +45,7 @@ public class ProgramPrinter_phase2 implements DustListener{
 
         String identifier = ctx.CLASSNAME(0).toString();
         String key = "class_"+identifier;
-        scopes.peek().insert(key, String.format("class (name: %s) (parent: %s)", identifier, parents));
+//        scopes.peek().insert(key, String.format("class (name: %s) (parent: %s)", identifier, parents));
         SymbolTable newScope = new SymbolTable(identifier, ctx.start.getLine(), scopes.peek());
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
@@ -85,7 +85,7 @@ public class ProgramPrinter_phase2 implements DustListener{
             default: return;
         }
         String key = "Field_"+identifier;
-        scopes.peek().insert(key, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
+//        scopes.peek().insert(key, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
     }
 
     @Override
@@ -108,7 +108,7 @@ public class ProgramPrinter_phase2 implements DustListener{
             default: return;
         }
         String key = "Field_"+identifier;
-        scopes.peek().insert(key, String.format("ClassArrayField (name: %s) (type: [%s])", ctx.ID().toString(), dataType));
+//        scopes.peek().insert(key, String.format("ClassArrayField (name: %s) (type: [%s])", ctx.ID().toString(), dataType));
     }
 
     @Override
@@ -144,13 +144,12 @@ public class ProgramPrinter_phase2 implements DustListener{
                     fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
                 }
 
-                newScope.insert("Field_"+entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
+//                newScope.insert("Field_"+entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
                 parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
             }
             parameterList.deleteCharAt(parameterList.length()-1).append(']');
         }
         String key = "Method_"+identifier;
-        scopes.peek().insert(key, String.format("Method (name: %s) (return type: [%s] %s)", ctx.ID(), returnType, parameterList));
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
@@ -179,13 +178,13 @@ public class ProgramPrinter_phase2 implements DustListener{
                     fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
                 }
 
-                newScope.insert("Field_" + entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
+//                newScope.insert("Field_" + entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
                 parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
             }
             parameterList.deleteCharAt(parameterList.length() - 1).append(']');
         }
         String key = "Constructor_"+identifier;
-        scopes.peek().insert(key, String.format("Constructor (name: %s) [parameter list: %s]", ctx.CLASSNAME(), parameterList));
+//        scopes.peek().insert(key, String.format("Constructor (name: %s) [parameter list: %s]", ctx.CLASSNAME(), parameterList));
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }

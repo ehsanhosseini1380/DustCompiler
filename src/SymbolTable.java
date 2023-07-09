@@ -9,7 +9,7 @@ public class SymbolTable {
     public int scopeNumber;
     public static LinkedList<SymbolTable> instances = new LinkedList<>();
 
-    public HashMap<String, String> table = new HashMap<>();
+    public HashMap<String, HashMap<String, String>> table = new HashMap<>();
     public int maxKeyLen = 0;
     public int maxValueLen = 0;
     public SymbolTable(String name, int scopeNumber, SymbolTable parent) {
@@ -19,13 +19,21 @@ public class SymbolTable {
         instances.add(this);
 
     }
+    public String valToString(HashMap<String,String> input){
+        StringBuilder s=new StringBuilder();
+        for(String key : input.keySet()){
+            s.append("(").append(key).append(":").append(input.get(key)).append(")");
+        }
+        return s.toString();
+    }
 
-    public void insert(String idefNames, String values){
+
+    public void insert(String idefNames, HashMap<String, String> values){
         table.put(idefNames, values);
         maxKeyLen = Math.max(maxKeyLen, idefNames.length()+1);
-        maxValueLen = Math.max(maxValueLen, values.length()+1);    }
+        maxValueLen = Math.max(maxValueLen, valToString(values).length()+1);    }
 
-    public String lookup(String idefName){
+    public HashMap<String, String> lookup(String idefName){
         return table.getOrDefault(idefName, null);
     }
 
@@ -36,9 +44,8 @@ public class SymbolTable {
         tableString.append(tableBorder);
         for(var entry: table.entrySet()){
             String key = entry.getKey();
-            String value = entry.getValue();
             key = String.format("%-" + maxKeyLen + "s", key);
-            value = String.format("%-" + maxValueLen + "s", value);
+            String value = String.format("%-" + maxValueLen + "s", valToString(entry.getValue()));
             tableString.append("| " + key + "| " + value + "|").append('\n');
         }
         tableString.append(tableBorder);

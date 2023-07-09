@@ -8,12 +8,12 @@ class Human(Nothing, Nothing2){
     int calories
     bool isHungryq
     Food newFood
+    Nose nose
 
-
-    def Human(Nose n){
+    def HumanMusic(Nose n){
         self.nose = n
         for i in range(0,100,1) {
-            print(0)
+            print(legs[7])
         }
     }
 
@@ -37,6 +37,7 @@ class Human(Nothing, Nothing2){
         calories += c
         newFood = food
         Drink water
+
         while(self.isHungry){
             Food newFood = Food()
             if(true){

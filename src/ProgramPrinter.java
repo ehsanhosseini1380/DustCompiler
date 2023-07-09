@@ -3,6 +3,9 @@ import gen.DustParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Stack;
 
 public class ProgramPrinter implements DustListener {
@@ -29,7 +32,9 @@ public class ProgramPrinter implements DustListener {
             Utils.reportDuplicateClassError(identifier, line, column);
             key = String.format("%s_%s_%s", identifier, line, column);
         }
-        scopes.peek().insert(key, "import" + " (name: " + ctx.CLASSNAME() + ")");
+        HashMap<String,String> properties=new HashMap<>();
+        properties.put("name",ctx.CLASSNAME().toString());
+        scopes.peek().insert(key, properties);
     }
 
     @Override
@@ -43,11 +48,11 @@ public class ProgramPrinter implements DustListener {
                 Utils.detectUndeclaredClass(ctx.CLASSNAME(i));
                 parents.append(ctx.CLASSNAME(i)).append(",");
             }
+            parents.deleteCharAt(parents.length()-1);
         }
         else {
             parents.append("object");
         }
-        parents.deleteCharAt(parents.length()-1);
 
         String identifier = ctx.CLASSNAME(0).toString();
         String key = "class_"+identifier;
@@ -57,7 +62,10 @@ public class ProgramPrinter implements DustListener {
             Utils.reportDuplicateClassError(identifier, line, column);
             key = String.format("%s_%s_%s", identifier, line, column);
         }
-        scopes.peek().insert(key, String.format("class (name: %s) (parent: %s)", identifier, parents));
+        HashMap<String,String> properties=new HashMap<>();
+        properties.put("name",identifier);
+        properties.put("parents",parents.toString());
+        scopes.peek().insert(key, properties);
         SymbolTable newScope = new SymbolTable(identifier, ctx.start.getLine(), scopes.peek());
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
@@ -100,14 +108,18 @@ public class ProgramPrinter implements DustListener {
         if(Utils.detectDuplicateDeclaration(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
             key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
         }
-        scopes.peek().insert(key, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
+        HashMap<String,String> properties=new HashMap<>();
+        properties.put("fieldType",fieldType);
+        properties.put("name",identifier);
+        properties.put("type",dataType);
+        scopes.peek().insert(key, properties);
     }
 
     @Override
     public void exitVarDec(DustParser.VarDecContext ctx) {}
 
     @Override
-    public void enterArrayDec(DustParser.ArrayDecContext ctx) { //TODO
+    public void enterArrayDec(DustParser.ArrayDecContext ctx) {
         String dataType;
         String identifier = ctx.ID().toString();
         switch (ctx.parent.getRuleIndex()) {
@@ -126,7 +138,11 @@ public class ProgramPrinter implements DustListener {
         if(Utils.detectDuplicateDeclaration(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
             key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
         }
-        scopes.peek().insert(key, String.format("ClassArrayField (name: %s) (type: [%s])", ctx.ID().toString(), dataType));
+        HashMap<String,String> properties=new HashMap<>();
+        properties.put("name",ctx.ID().toString());
+        properties.put("type",dataType);
+        properties.put("size",ctx.INTEGER().toString());
+        scopes.peek().insert(key, properties);
     }
 
     @Override
@@ -149,21 +165,25 @@ public class ProgramPrinter implements DustListener {
         //copy az phase 1
         if(ctx.parameter().size() != 0){
             int index = 0;
-            parameterList.append("[parameter list: ");
+//            parameterList.append("[parameter list: ");
             for (var entry: ctx.parameter(0).varDec()){
                 index++;
                 String dataType;
                 String fullDataType;
                 if(entry.CLASSNAME() == null) {
-                    dataType = fullDataType = entry.TYPE().toString()+", isDefined: True";
+                    fullDataType = entry.TYPE().toString()+", isDefined: True)";
                 }
                 else {
                     dataType = entry.CLASSNAME().toString();
-                    fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
+                    fullDataType = String.format("classType= %s, isDefined= %s)", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
                 }
-
-                newScope.insert("Field_"+entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
-                parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
+                HashMap<String,String> properties=new HashMap<>();
+                properties.put("name", entry.ID().toString());
+                properties.put("type",fullDataType);
+                properties.put("index",String.valueOf(index));
+                newScope.insert("Field_"+entry.ID(), properties);
+                //TODO change the way that we store parameters in a method
+                parameterList.append(String.format("[(type: %s, (index: %d)],", fullDataType, index));
             }
             parameterList.deleteCharAt(parameterList.length()-1).append(']');
         }
@@ -172,8 +192,11 @@ public class ProgramPrinter implements DustListener {
         if(Utils.detectDuplicateDeclaration(identifier, "Method", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
             key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
         }
-
-        scopes.peek().insert(key, String.format("Method (name: %s) (return type: [%s] %s)", ctx.ID(), returnType, parameterList));
+        HashMap<String,String> properties=new HashMap<>();
+        properties.put("name", ctx.ID().toString());
+        properties.put("return type",returnType);
+        properties.put("parameters",parameterList.toString());
+        scopes.peek().insert(key, properties);
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
@@ -203,8 +226,11 @@ public class ProgramPrinter implements DustListener {
                     dataType = entry.CLASSNAME().toString();
                     fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
                 }
-
-                newScope.insert("Field_"+entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
+                HashMap<String,String> properties=new HashMap<>();
+                properties.put("name", entry.ID().toString());
+                properties.put("type",fullDataType);
+                properties.put("index",String.valueOf(index));
+                newScope.insert("Field_"+entry.ID(), properties);
                 parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
             }
             parameterList.deleteCharAt(parameterList.length()-1).append(']');
@@ -214,10 +240,15 @@ public class ProgramPrinter implements DustListener {
         if(Utils.detectDuplicateDeclaration(identifier, "Constructor", ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1, scopes)){
             key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1);
         }
-
-        scopes.peek().insert(key, String.format("Constructor (name: %s) [parameter list: %s]", ctx.CLASSNAME(), parameterList));
+        HashMap<String,String> properties=new HashMap<>();
+        properties.put("name", ctx.CLASSNAME().toString());
+        properties.put("parameters",parameterList.toString());
+        scopes.peek().insert(key, properties);
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
+        int line = ctx.start.getLine();
+        int column = ctx.CLASSNAME().getSymbol().getCharPositionInLine();
+        Utils.detectConstructorError(scopes.peek().parent.name, ctx.CLASSNAME().toString(), line, column);
     }
 
     @Override
@@ -337,6 +368,9 @@ public class ProgramPrinter implements DustListener {
     public void enterPrefixexp(DustParser.PrefixexpContext ctx) {
         if(ctx.ID()!=null)
             Utils.detectUndeclaredVariable(ctx.ID(), scopes);
+        if(ctx.INTEGER() != null){
+
+        }
     }
 
     @Override

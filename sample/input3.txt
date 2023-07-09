@@ -2,15 +2,7 @@ import Nothing
 import Nothing2
 import Nothing
 import Temp
-
-class bil(Temp){
-    Nose nose
-    Hand[2] hands
-
-    def Temp(Nose n){
-            self.nose = n
-        }
-}
+import Hand
 
 class Human(Nothing3, Nothing2){
     Nose nose
@@ -18,8 +10,9 @@ class Human(Nothing3, Nothing2){
     Leg[2] legs
     int calories
     bool isHungry
+    Nose nose
 
-    def Human(Nose n){
+    def Humen(Nose n){
         self.nose = n
     }
 
@@ -36,7 +29,9 @@ class Human(Nothing3, Nothing2){
             if(calories > 2){
             print("hello food")
             }
-            self.isHungry = self.checkIsHungry()
+            self.isHungry = self.checkIsHungry(calories)
+            Hand newhand = Hand()
+            newhand = hands[3]
         }
     }
 
