@@ -122,6 +122,7 @@ public class ProgramPrinter implements DustListener {
     public void enterArrayDec(DustParser.ArrayDecContext ctx) {
         String dataType;
         String identifier = ctx.ID().toString();
+
         switch (ctx.parent.getRuleIndex()) {
             case 3: //class_body
                 if (ctx.CLASSNAME()==null)
@@ -366,9 +367,14 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterPrefixexp(DustParser.PrefixexpContext ctx) {
+
         if(ctx.ID()!=null)
             Utils.detectUndeclaredVariable(ctx.ID(), scopes);
         if(ctx.INTEGER() != null){
+            int line = ctx.start.getLine();
+            int column = ctx.INTEGER().getSymbol().getCharPositionInLine();
+
+            Utils.outOfRange(ctx.prefixexp().getText(), ctx.INTEGER(), line, column, scopes);
 
         }
     }

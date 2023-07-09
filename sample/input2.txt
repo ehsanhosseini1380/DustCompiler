@@ -4,7 +4,7 @@ import Voice
 class Human(Nothing, Nothing2){
     Nose nose
     Hand[2] hands
-    Leg[2] legs
+    Leg[4] legs
     int calories
     bool isHungryq
     Food newFood

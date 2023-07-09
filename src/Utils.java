@@ -1,3 +1,6 @@
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.Stack;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -42,8 +45,22 @@ public class Utils {
     }
 
     public static void detectConstructorError(String className, String constructorName, int line, int column){
-        if (className != constructorName){
+        if (!Objects.equals(className, constructorName)){
             System.out.printf("Error101 : in line [%d:%d] , constructor name missmatch\n", line, column);
+        }
+    }
+
+    public static void outOfRange(String identifier, TerminalNode integer, int line, int column, Stack<SymbolTable> scopes){
+        HashMap <String, String> dec = new HashMap<>();
+        SymbolTable symbolTable = scopes.peek();
+        boolean notFound = true;
+        while(notFound){
+            dec = symbolTable.lookup("Field_"+identifier);
+            notFound = (dec == null);
+            symbolTable = symbolTable.parent;
+        }
+        if(!Objects.equals(dec.get("size"), integer.getText())){
+            System.out.printf("Error107 : in line [%d:%d] , array index out of range\n", line, column);
         }
     }
 }
