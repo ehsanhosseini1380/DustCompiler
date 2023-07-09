@@ -12,7 +12,10 @@ import java.util.Queue;
 
 public class Compiler {
     public static void main(String[] args) throws IOException {
-        CharStream stream = CharStreams.fromFileName("sample/input3.txt");
+        System.out.println(String.format("%-7s", "ehsan"));
+
+
+        CharStream stream = CharStreams.fromFileName("sample/input2.txt");
         DustLexer lexer = new DustLexer(stream);
         TokenStream tokens = new CommonTokenStream(lexer);
         DustParser parser = new DustParser(tokens);

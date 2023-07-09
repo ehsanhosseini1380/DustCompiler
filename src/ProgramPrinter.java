@@ -3,14 +3,18 @@ import gen.DustParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Stack;
 
 public class ProgramPrinter implements DustListener {
     public final Stack<SymbolTable> scopes = new Stack<>();
+
     @Override
     public void enterProgram(DustParser.ProgramContext ctx) {
         scopes.push(new SymbolTable("program", ctx.start.getLine(), null));
-        SymbolTable.root=scopes.peek();
+        SymbolTable.root = scopes.peek();
     }
 
     @Override
@@ -22,48 +26,61 @@ public class ProgramPrinter implements DustListener {
     public void enterImportclass(DustParser.ImportclassContext ctx) {
         String identifier = ctx.CLASSNAME().toString();
         String key = "import_" + identifier;
-        scopes.peek().insert(key, "import" + " (name: " + ctx.CLASSNAME() + ")");
+        if(Boolean.parseBoolean(Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString()))){
+            int line = ctx.start.getLine();
+            int column = ctx.CLASSNAME().getSymbol().getCharPositionInLine();
+            Utils.reportDuplicateClassError(identifier, line, column);
+            key = String.format("%s_%s_%s", identifier, line, column);
+        }
+        HashMap<String,String> properties=new HashMap<>();
+        properties.put("name",ctx.CLASSNAME().toString());
+        scopes.peek().insert(key, properties);
     }
 
     @Override
-    public void exitImportclass(DustParser.ImportclassContext ctx) {
-
-    }
+    public void exitImportclass(DustParser.ImportclassContext ctx) {}
 
     @Override
     public void enterClassDef(DustParser.ClassDefContext ctx) {
         StringBuilder parents = new StringBuilder();
         if(ctx.CLASSNAME(1) != null){
             for (int i=1;i<ctx.CLASSNAME().size();i++){
+                Utils.detectUndeclaredClass(ctx.CLASSNAME(i));
                 parents.append(ctx.CLASSNAME(i)).append(",");
             }
+            parents.deleteCharAt(parents.length()-1);
         }
         else {
             parents.append("object");
         }
-        parents.deleteCharAt(parents.length()-1);
 
         String identifier = ctx.CLASSNAME(0).toString();
         String key = "class_"+identifier;
-        scopes.peek().insert(key, String.format("class (name: %s) (parent: %s)", identifier, parents));
+        if(Boolean.parseBoolean(Utils.checkDataTypeIsDefined(identifier))){
+            int line = ctx.start.getLine();
+            int column = ctx.CLASSNAME(0).getSymbol().getCharPositionInLine();
+            Utils.reportDuplicateClassError(identifier, line, column);
+            key = String.format("%s_%s_%s", identifier, line, column);
+        }
+        HashMap<String,String> properties=new HashMap<>();
+        properties.put("name",identifier);
+        properties.put("parents",parents.toString());
+        scopes.peek().insert(key, properties);
         SymbolTable newScope = new SymbolTable(identifier, ctx.start.getLine(), scopes.peek());
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
     }
 
     @Override
-    public void exitClassDef(DustParser.ClassDefContext ctx) {
+    public void exitClassDef(DustParser.ClassDefContext ctx){
         scopes.pop();
     }
 
     @Override
-    public void enterClass_body(DustParser.Class_bodyContext ctx) {
-    }
+    public void enterClass_body(DustParser.Class_bodyContext ctx) {}
 
     @Override
-    public void exitClass_body(DustParser.Class_bodyContext ctx) {
-
-    }
+    public void exitClass_body(DustParser.Class_bodyContext ctx) {}
 
     @Override
     public void enterVarDec(DustParser.VarDecContext ctx) {
@@ -72,60 +89,129 @@ public class ProgramPrinter implements DustListener {
         String dataType;
         if (ctx.CLASSNAME()==null)
             dataType = ctx.TYPE().toString()+", isDefined: True";
-        else {
-            dataType = "ClassType= " + ctx.CLASSNAME().toString() + ", isDefined: " + Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
+        else{
+            dataType = "ClassType= "+ctx.CLASSNAME().toString()+", isDefined: "+ Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
+            Utils.detectUndeclaredClass(ctx.CLASSNAME());
         }
+
         switch (ctx.parent.getRuleIndex()) {
-            case 3 -> fieldType = "ClassField";
-            case 19, 9 -> fieldType = "MethodField";
+            case 3 -> //class field
+                    fieldType = "ClassField";
+            case 19, 9 -> //assignment/method field
+                    fieldType = "MethodField";
             default -> {
                 return;
             }
         }
+
         String key = "Field_"+identifier;
-        scopes.peek().insert(key, String.format("%s (name:%s) (type: [%s])", fieldType, identifier, dataType));
+        if(Utils.detectDuplicateDeclaration(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
+            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
+        }
+        HashMap<String,String> properties=new HashMap<>();
+        properties.put("fieldType",fieldType);
+        properties.put("name",identifier);
+        properties.put("type",dataType);
+        scopes.peek().insert(key, properties);
     }
 
     @Override
-    public void exitVarDec(DustParser.VarDecContext ctx) {
-
-    }
+    public void exitVarDec(DustParser.VarDecContext ctx) {}
 
     @Override
     public void enterArrayDec(DustParser.ArrayDecContext ctx) {
         String dataType;
         String identifier = ctx.ID().toString();
-        if (ctx.parent.getRuleIndex() == 3) {//class_body
-            if (ctx.CLASSNAME() == null)
-                dataType = ctx.TYPE().toString() + ", isDefined: True";
-            else {
-                dataType = ctx.CLASSNAME().toString() + ", isDefined: " + Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
-            }
-        } else {
-            return;
+        switch (ctx.parent.getRuleIndex()) {
+            case 3: //class_body
+                if (ctx.CLASSNAME()==null)
+                    dataType = ctx.TYPE().toString()+", isDefined: True";
+                else{
+                    dataType = ctx.CLASSNAME().toString()+", isDefined: "+ Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
+                    Utils.detectUndeclaredClass(ctx.CLASSNAME());
+                }
+                break;
+            default: return;
         }
+
         String key = "Field_"+identifier;
-        scopes.peek().insert(key, String.format("ClassArrayField (name: %s) (type: [%s])", ctx.ID().toString(), dataType));
+        if(Utils.detectDuplicateDeclaration(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
+            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
+        }
+        HashMap<String,String> properties=new HashMap<>();
+        properties.put("name",ctx.ID().toString());
+        properties.put("type",dataType);
+        properties.put("size",ctx.INTEGER().toString());
+        scopes.peek().insert(key, properties);
     }
 
     @Override
-    public void exitArrayDec(DustParser.ArrayDecContext ctx) {
-
-    }
+    public void exitArrayDec(DustParser.ArrayDecContext ctx) {}
 
     @Override
     public void enterMethodDec(DustParser.MethodDecContext ctx) {
         SymbolTable newScope = new SymbolTable(ctx.ID().toString(), ctx.start.getLine(), scopes.peek());
+
         String returnType = "void";
         String identifier = ctx.ID().toString();
         if(ctx.TYPE() != null)
             returnType = ctx.TYPE().toString();
         else if(ctx.CLASSNAME() != null) {
             returnType = "class type= " + ctx.CLASSNAME().toString();
+            Utils.detectUndeclaredClass(ctx.CLASSNAME());
         }
 
         StringBuilder parameterList = new StringBuilder();
         //copy az phase 1
+        if(ctx.parameter().size() != 0){
+            int index = 0;
+//            parameterList.append("[parameter list: ");
+            for (var entry: ctx.parameter(0).varDec()){
+                index++;
+                String dataType;
+                String fullDataType;
+                if(entry.CLASSNAME() == null) {
+                    fullDataType = entry.TYPE().toString()+", isDefined: True)";
+                }
+                else {
+                    dataType = entry.CLASSNAME().toString();
+                    fullDataType = String.format("classType= %s, isDefined= %s)", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
+                }
+                HashMap<String,String> properties=new HashMap<>();
+                properties.put("name", entry.ID().toString());
+                properties.put("type",fullDataType);
+                properties.put("index",String.valueOf(index));
+                newScope.insert("Field_"+entry.ID(), properties);
+                //TODO change the way that we store parameters in a method
+                parameterList.append(String.format("[(type: %s, (index: %d)],", fullDataType, index));
+            }
+            parameterList.deleteCharAt(parameterList.length()-1).append(']');
+        }
+
+        String key = "Method_"+identifier;
+        if(Utils.detectDuplicateDeclaration(identifier, "Method", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
+            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
+        }
+        HashMap<String,String> properties=new HashMap<>();
+        properties.put("name", ctx.ID().toString());
+        properties.put("return type",returnType);
+        properties.put("parameters",parameterList.toString());
+        scopes.peek().insert(key, properties);
+        scopes.peek().children.add(newScope);
+        scopes.push(newScope);
+    }
+
+    @Override
+    public void exitMethodDec(DustParser.MethodDecContext ctx) {
+        scopes.pop();
+    }
+
+    @Override
+    public void enterConstructor(DustParser.ConstructorContext ctx) {
+        SymbolTable newScope = new SymbolTable(ctx.CLASSNAME().toString(), ctx.start.getLine(), scopes.peek());
+
+        String identifier = ctx.CLASSNAME().toString();
+        StringBuilder parameterList = new StringBuilder();
         if(ctx.parameter().size() != 0){
             int index = 0;
             parameterList.append("[parameter list: ");
@@ -140,51 +226,29 @@ public class ProgramPrinter implements DustListener {
                     dataType = entry.CLASSNAME().toString();
                     fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
                 }
-
-                newScope.insert("Field_"+entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
+                HashMap<String,String> properties=new HashMap<>();
+                properties.put("name", entry.ID().toString());
+                properties.put("type",fullDataType);
+                properties.put("index",String.valueOf(index));
+                newScope.insert("Field_"+entry.ID(), properties);
                 parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
             }
             parameterList.deleteCharAt(parameterList.length()-1).append(']');
         }
-        String key = "Method_"+identifier;
-        scopes.peek().insert(key, String.format("Method (name: %s) (return type: [%s] %s)", ctx.ID(), returnType, parameterList));
-        scopes.peek().children.add(newScope);
-        scopes.push(newScope);
-    }
 
-    @Override
-    public void exitMethodDec(DustParser.MethodDecContext ctx) {
-        scopes.pop();
-    }
-
-    @Override
-    public void enterConstructor(DustParser.ConstructorContext ctx) {
-        SymbolTable newScope = new SymbolTable(ctx.CLASSNAME().toString(), ctx.start.getLine(), scopes.peek());
-        String identifier = ctx.CLASSNAME().toString();
-        StringBuilder parameterList = new StringBuilder();
-        if(ctx.parameter().size() != 0) {
-            int index = 0;
-            parameterList.append("[parameter list: ");
-            for (var entry : ctx.parameter(0).varDec()) {
-                index++;
-                String dataType;
-                String fullDataType;
-                if (entry.CLASSNAME() == null) {
-                    dataType = fullDataType = entry.TYPE().toString() + ", isDefined: True";
-                } else {
-                    dataType = entry.CLASSNAME().toString();
-                    fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
-                }
-
-                newScope.insert("Field_" + entry.ID(), String.format("Parameter (name: %s) (type: %s) (index: %d)", entry.ID(), fullDataType, index));
-                parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
-            }
-            parameterList.deleteCharAt(parameterList.length() - 1).append(']');
-        }
         String key = "Constructor_"+identifier;
-        scopes.peek().insert(key, String.format("Constructor (name: %s) [parameter list: %s]", ctx.CLASSNAME(), parameterList));
+        if(Utils.detectDuplicateDeclaration(identifier, "Constructor", ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1, scopes)){
+            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.CLASSNAME().getSymbol().getCharPositionInLine()+1);
+        }
+        HashMap<String,String> properties=new HashMap<>();
+        properties.put("name", ctx.CLASSNAME().toString());
+        properties.put("parameters",parameterList.toString());
+        scopes.peek().insert(key, properties);
         scopes.peek().children.add(newScope);
         scopes.push(newScope);
+        int line = ctx.start.getLine();
+        int column = ctx.CLASSNAME().getSymbol().getCharPositionInLine();
+        Utils.detectConstructorError(scopes.peek().parent.name, ctx.CLASSNAME().toString(), line, column);
     }
 
     @Override
@@ -193,54 +257,34 @@ public class ProgramPrinter implements DustListener {
     }
 
     @Override
-    public void enterParameter(DustParser.ParameterContext ctx) {
-
-    }
+    public void enterParameter(DustParser.ParameterContext ctx) {}
 
     @Override
-    public void exitParameter(DustParser.ParameterContext ctx) {
-
-    }
+    public void exitParameter(DustParser.ParameterContext ctx) {}
 
     @Override
-    public void enterStatement(DustParser.StatementContext ctx) {
-
-    }
+    public void enterStatement(DustParser.StatementContext ctx) {}
 
     @Override
-    public void exitStatement(DustParser.StatementContext ctx) {
-
-    }
+    public void exitStatement(DustParser.StatementContext ctx) {}
 
     @Override
-    public void enterReturn_statment(DustParser.Return_statmentContext ctx) {
-
-    }
+    public void enterReturn_statment(DustParser.Return_statmentContext ctx) {}
 
     @Override
-    public void exitReturn_statment(DustParser.Return_statmentContext ctx) {
-
-    }
+    public void exitReturn_statment(DustParser.Return_statmentContext ctx) {}
 
     @Override
-    public void enterCondition_list(DustParser.Condition_listContext ctx) {
-
-    }
+    public void enterCondition_list(DustParser.Condition_listContext ctx) {}
 
     @Override
-    public void exitCondition_list(DustParser.Condition_listContext ctx) {
-
-    }
+    public void exitCondition_list(DustParser.Condition_listContext ctx) {}
 
     @Override
-    public void enterCondition(DustParser.ConditionContext ctx) {
-
-    }
+    public void enterCondition(DustParser.ConditionContext ctx) {}
 
     @Override
-    public void exitCondition(DustParser.ConditionContext ctx) {
-
-    }
+    public void exitCondition(DustParser.ConditionContext ctx) {}
 
     @Override
     public void enterIf_statment(DustParser.If_statmentContext ctx) {
@@ -279,19 +323,15 @@ public class ProgramPrinter implements DustListener {
     }
 
     @Override
-    public void enterPrint_statment(DustParser.Print_statmentContext ctx) {
-
-    }
+    public void enterPrint_statment(DustParser.Print_statmentContext ctx) {}
 
     @Override
-    public void exitPrint_statment(DustParser.Print_statmentContext ctx) {
-
-    }
+    public void exitPrint_statment(DustParser.Print_statmentContext ctx) {}
 
     @Override
     public void enterFor_statment(DustParser.For_statmentContext ctx) {
         for (TerminalNode entry: ctx.ID())
-            Utils.detectUndeclaredVariable(entry,scopes);
+            Utils.detectUndeclaredVariable(entry, scopes);
 
         SymbolTable newScope = new SymbolTable("for", ctx.start.getLine(), scopes.peek());
         scopes.peek().children.add(newScope);
@@ -304,114 +344,77 @@ public class ProgramPrinter implements DustListener {
     }
 
     @Override
-    public void enterMethod_call(DustParser.Method_callContext ctx) {
-
-    }
+    public void enterMethod_call(DustParser.Method_callContext ctx) {}
 
     @Override
-    public void exitMethod_call(DustParser.Method_callContext ctx) {
-
-    }
+    public void exitMethod_call(DustParser.Method_callContext ctx) {}
 
     @Override
-    public void enterAssignment(DustParser.AssignmentContext ctx) {
-
-    }
+    public void enterAssignment(DustParser.AssignmentContext ctx) {}
 
     @Override
-    public void exitAssignment(DustParser.AssignmentContext ctx) {
-
-    }
+    public void exitAssignment(DustParser.AssignmentContext ctx) {}
 
     @Override
     public void enterExp(DustParser.ExpContext ctx) {
         if(ctx.ID()!=null)
-            Utils.detectUndeclaredVariable(ctx.ID(),scopes);
+            Utils.detectUndeclaredVariable(ctx.ID(), scopes);
     }
 
     @Override
-    public void exitExp(DustParser.ExpContext ctx) {
-
-    }
+    public void exitExp(DustParser.ExpContext ctx) {}
 
     @Override
     public void enterPrefixexp(DustParser.PrefixexpContext ctx) {
         if(ctx.ID()!=null)
-            Utils.detectUndeclaredVariable(ctx.ID(),scopes);
+            Utils.detectUndeclaredVariable(ctx.ID(), scopes);
+        if(ctx.INTEGER() != null){
+
+        }
     }
 
     @Override
-    public void exitPrefixexp(DustParser.PrefixexpContext ctx) {
-
-    }
+    public void exitPrefixexp(DustParser.PrefixexpContext ctx) {}
 
     @Override
-    public void enterArgs(DustParser.ArgsContext ctx) {
-
-    }
+    public void enterArgs(DustParser.ArgsContext ctx) {}
 
     @Override
-    public void exitArgs(DustParser.ArgsContext ctx) {
-
-    }
+    public void exitArgs(DustParser.ArgsContext ctx) {}
 
     @Override
-    public void enterExplist(DustParser.ExplistContext ctx) {
-
-    }
+    public void enterExplist(DustParser.ExplistContext ctx) {}
 
     @Override
-    public void exitExplist(DustParser.ExplistContext ctx) {
-
-    }
+    public void exitExplist(DustParser.ExplistContext ctx) {}
 
     @Override
-    public void enterArithmetic_operator(DustParser.Arithmetic_operatorContext ctx) {
-
-    }
+    public void enterArithmetic_operator(DustParser.Arithmetic_operatorContext ctx) {}
 
     @Override
-    public void exitArithmetic_operator(DustParser.Arithmetic_operatorContext ctx) {
-
-    }
+    public void exitArithmetic_operator(DustParser.Arithmetic_operatorContext ctx) {}
 
     @Override
-    public void enterRelational_operators(DustParser.Relational_operatorsContext ctx) {
-
-    }
+    public void enterRelational_operators(DustParser.Relational_operatorsContext ctx) {}
 
     @Override
-    public void exitRelational_operators(DustParser.Relational_operatorsContext ctx) {
-
-    }
+    public void exitRelational_operators(DustParser.Relational_operatorsContext ctx) {}
 
     @Override
-    public void enterAssignment_operators(DustParser.Assignment_operatorsContext ctx) {
-
-    }
+    public void enterAssignment_operators(DustParser.Assignment_operatorsContext ctx) {}
 
     @Override
-    public void exitAssignment_operators(DustParser.Assignment_operatorsContext ctx) {
-
-    }
+    public void exitAssignment_operators(DustParser.Assignment_operatorsContext ctx) {}
 
     @Override
-    public void visitTerminal(TerminalNode terminalNode) {
-
-    }
+    public void visitTerminal(TerminalNode terminalNode) {}
 
     @Override
-    public void visitErrorNode(ErrorNode errorNode) {
-
-    }
+    public void visitErrorNode(ErrorNode errorNode) {}
 
     @Override
-    public void enterEveryRule(ParserRuleContext parserRuleContext) {
-
-    }
+    public void enterEveryRule(ParserRuleContext parserRuleContext) {}
 
     @Override
-    public void exitEveryRule(ParserRuleContext parserRuleContext) {
-
-    }
+    public void exitEveryRule(ParserRuleContext parserRuleContext) {}
 }

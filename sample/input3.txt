@@ -1,13 +1,18 @@
 import Nothing
 import Nothing2
-class Human(Nothing, Nothing2){
+import Nothing
+import Temp
+import Hand
+
+class Human(Nothing3, Nothing2){
     Nose nose
     Hand[2] hands
     Leg[2] legs
     int calories
     bool isHungry
+    Nose nose
 
-    def Human(Nose n){
+    def Humen(Nose n){
         self.nose = n
     }
 
@@ -24,7 +29,9 @@ class Human(Nothing, Nothing2){
             if(calories > 2){
             print("hello food")
             }
-            self.isHungry = self.checkIsHungry()
+            self.isHungry = self.checkIsHungry(calories)
+            Hand newhand = Hand()
+            newhand = hands[3]
         }
     }
 

@@ -13,6 +13,8 @@ public class Utils {
             notFound = (symbolTable.lookup("Field_"+id.getText())==null);
             symbolTable = symbolTable.parent;
         }
+        if(notFound)
+            System.out.printf("Error106 : in line [%d:%d] , Can not find Variable [%s]\n", id.getSymbol().getLine(), id.getSymbol().getCharPositionInLine()+1, id.getText());
     }
 
 
@@ -27,7 +29,8 @@ public class Utils {
         return false;
     }
 
-    public void detectUndeclaredClass(TerminalNode className){
+
+    public static void detectUndeclaredClass(TerminalNode className){
         if(!Boolean.parseBoolean(checkDataTypeIsDefined(className.getText()))){
             System.out.printf("Error105 : in line [%d:%d] , Can not find Class [%s]\n", className.getSymbol().getLine(), className.getSymbol().getCharPositionInLine()+1, className.getText());
         }
@@ -35,6 +38,12 @@ public class Utils {
 
 
     public static void reportDuplicateClassError(String identifier, int line, int column){
-        System.out.printf("Error 100 : in line [%d:%d] , class [%s] has been defined already\n", line, column, identifier);
+        System.out.printf("Error100 : in line [%d:%d] , class [%s] has been defined already\n", line, column, identifier);
+    }
+
+    public static void detectConstructorError(String className, String constructorName, int line, int column){
+        if (className != constructorName){
+            System.out.printf("Error101 : in line [%d:%d] , constructor name missmatch\n", line, column);
+        }
     }
 }
