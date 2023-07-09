@@ -14,7 +14,7 @@ class Human(Nothing, Nothing2){
         self.nose = n
     }
 
-    def int speak(){
+    def int speak(Nose cock){
         Voice voice
         print(legs[7])
         return voice
@@ -23,23 +23,15 @@ class Human(Nothing, Nothing2){
     def void main(){
     }
 
-    def Voice speak(){
-        Voice voice
-        for i in hands{
-            print(0)
-        }
-        Nose b
-        speak(b)
-        return voice
-    }
 
     def void eat(Food food, int c){
+        Nose b
+        speak(b)
         calories += c
         newFood = food
         Drink water
         while(self.isHungry){
             Food newFood = Food()
-            eat(newFood, calories)
             self.isHungry = self.checkIsHungry()
         }
     }

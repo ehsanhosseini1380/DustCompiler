@@ -85,12 +85,15 @@ public class ProgramPrinter implements DustListener {
     public void enterVarDec(DustParser.VarDecContext ctx) {
         String fieldType;
         String identifier = ctx.ID().toString();
-        String dataType;
-        if (ctx.CLASSNAME()==null)
-            dataType = ctx.TYPE().toString()+", isDefined: True";
+        HashMap<String,String> properties=new HashMap<>();
+        if (ctx.CLASSNAME()==null) {
+            properties.put("type", ctx.TYPE().toString());
+            properties.put("isDefined", "True");
+        }
         else{
-            dataType = "ClassType= "+ctx.CLASSNAME().toString()+", isDefined: "+ Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
             Utils.detectUndeclaredClass(ctx.CLASSNAME());
+            properties.put("type", ctx.CLASSNAME().toString());
+            properties.put("isDefined", Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString()));
         }
 
         switch (ctx.parent.getRuleIndex()) {
@@ -105,11 +108,8 @@ public class ProgramPrinter implements DustListener {
 
         String key = "Field_"+identifier;
         if(!Utils.detectDuplicateDeclaration(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
-//            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
-            HashMap<String,String> properties=new HashMap<>();
             properties.put("fieldType",fieldType);
             properties.put("name",identifier);
-            properties.put("type",dataType);
             scopes.peek().insert(key, properties);
         }
 
@@ -120,16 +120,19 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterArrayDec(DustParser.ArrayDecContext ctx) {
-        String dataType;
         String identifier = ctx.ID().toString();
+        HashMap<String,String> properties=new HashMap<>();
 
         switch (ctx.parent.getRuleIndex()) {
             case 3:
-                if (ctx.CLASSNAME()==null)
-                    dataType = ctx.TYPE().toString()+", isDefined: True";
+                if (ctx.CLASSNAME()==null) {
+                    properties.put("type", ctx.TYPE().toString());
+                    properties.put("isDefined", "True");
+                }
                 else{
-                    dataType = ctx.CLASSNAME().toString()+", isDefined: "+ Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString());
                     Utils.detectUndeclaredClass(ctx.CLASSNAME());
+                    properties.put("type", ctx.CLASSNAME().toString());
+                    properties.put("isDefined", Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString()));
                 }
                 break;
             default: return;
@@ -137,10 +140,7 @@ public class ProgramPrinter implements DustListener {
 
         String key = "Field_"+identifier;
         if(!Utils.detectDuplicateDeclaration(identifier, "Field", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
-//            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
-            HashMap<String,String> properties=new HashMap<>();
             properties.put("name",ctx.ID().toString());
-            properties.put("type",dataType);
             properties.put("size",ctx.INTEGER().toString());
             scopes.peek().insert(key, properties);
         }
@@ -384,16 +384,15 @@ public class ProgramPrinter implements DustListener {
     public void exitPrefixexp(DustParser.PrefixexpContext ctx) {}
 
     @Override
-    public void enterArgs(DustParser.ArgsContext ctx) {}
+    public void enterArgs(DustParser.ArgsContext ctx) {
 
+    }
     @Override
     public void exitArgs(DustParser.ArgsContext ctx) {}
 
     @Override
     public void enterExplist(DustParser.ExplistContext ctx) {
-//        for (int i=0; i < ctx.exp().size(); i++)
-//            System.out.println(ctx.exp(i).getText());
-        Utils.deepLookup(ctx.getText(), scopes);
+         Utils.checkParameter(ctx,ctx.parent.parent.getChild(0).getText(),scopes);
     }
 
     @Override
