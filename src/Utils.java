@@ -72,13 +72,5 @@ public class Utils {
 
     public static void checkParameter(DustParser.Method_callContext parameter, Stack<SymbolTable> scopes){
         System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-="+scopes.peek().table.keySet());
-//        for (int i = 0; i < parameter.varDec().size(); i++) {
-//            System.out.println(parameter.varDec(i).start.getText());
-//            System.out.println(scopes.peek().parent.table.get(String.format("type%d",i+1)));
-//            System.out.println(String.format("type%d",i+1));
-//            parameterList.append(parameter.varDec(i).start.getText()).append(" ").append(parameter.varDec(i).stop.getText());
-//            if (parameter.varDec().size() > 1) parameterList.append(", ");
-//        }
-
     }
 }

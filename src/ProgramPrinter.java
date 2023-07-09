@@ -95,9 +95,9 @@ public class ProgramPrinter implements DustListener {
         }
 
         switch (ctx.parent.getRuleIndex()) {
-            case 3 -> //class field
+            case 3 ->
                     fieldType = "ClassField";
-            case 19, 9 -> //assignment/method field
+            case 19, 9 ->
                     fieldType = "MethodField";
             default -> {
                 return;
@@ -125,7 +125,7 @@ public class ProgramPrinter implements DustListener {
         String identifier = ctx.ID().toString();
 
         switch (ctx.parent.getRuleIndex()) {
-            case 3: //class_body
+            case 3:
                 if (ctx.CLASSNAME()==null)
                     dataType = ctx.TYPE().toString()+", isDefined: True";
                 else{
@@ -167,10 +167,8 @@ public class ProgramPrinter implements DustListener {
         StringBuilder parameterList = new StringBuilder();
         HashMap<String,String> currentProperties=new HashMap<>();
 
-        //copy az phase 1
         if(ctx.parameter().size() != 0){
             int index = 0;
-//            parameterList.append("[parameter list: ");
             for (var entry: ctx.parameter(0).varDec()){
                 index++;
                 String dataType;
@@ -196,7 +194,6 @@ public class ProgramPrinter implements DustListener {
 
         String key = "Method_"+identifier;
         if(!Utils.detectDuplicateDeclaration(identifier, "Method", ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1, scopes)){
-//            key = String.format("%s_%d_%d", identifier, ctx.start.getLine(), ctx.ID().getSymbol().getCharPositionInLine()+1);
                 currentProperties.put("name", ctx.ID().toString());
                 currentProperties.put("return type",returnType);
                 currentProperties.put("parameters",parameterList.toString());
@@ -265,10 +262,6 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterParameter(DustParser.ParameterContext ctx) {
-//        for (int i = 0; i < ctx.varDec().size(); i++) {
-//            parameterList.append(ctx.varDec(i).start.getText()).append(" ").append(ctx.varDec(i).stop.getText());
-//            if (ctx.varDec().size() > 1) parameterList.append(", ");
-//        }
     }
 
     @Override

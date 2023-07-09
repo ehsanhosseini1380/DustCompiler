@@ -15,7 +15,7 @@ public class Compiler {
         System.out.println(String.format("%-7s", "ehsan"));
 
 
-        CharStream stream = CharStreams.fromFileName("sample/inputDoodal.txt");
+        CharStream stream = CharStreams.fromFileName("sample/input2.txt");
         DustLexer lexer = new DustLexer(stream);
         TokenStream tokens = new CommonTokenStream(lexer);
         DustParser parser = new DustParser(tokens);
@@ -26,7 +26,7 @@ public class Compiler {
 //        ProgramPrinter listener = new ProgramPrinter();
 //        phase 2:
 //        ProgramPrinter_phase2 listener=new ProgramPrinter_phase2();
-        //        phase 3, 4:
+//        phase 3, 4:
         ProgramPrinter listener=new ProgramPrinter();
         walker.walk(listener, tree);
         printTreeBFS(SymbolTable.root);

@@ -35,12 +35,8 @@ class Human(Nothing, Nothing2){
         calories += c
         newFood = food
         Drink water
-
         while(self.isHungry){
             Food newFood = Food()
-            if(true){
-                int a
-            }
             eat(newFood)
             self.isHungry = self.checkIsHungry()
         }
