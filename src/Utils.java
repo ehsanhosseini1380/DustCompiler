@@ -1,5 +1,4 @@
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Stack;
 
@@ -14,12 +13,12 @@ public class Utils {
     public static void detectUndeclaredVariable(TerminalNode id, Stack<SymbolTable> scopes){
         boolean notFound = true;
         SymbolTable symbolTable = scopes.peek();
-        while(notFound && symbolTable!=null){
-            notFound = (symbolTable.lookup("Field_"+id.getText())==null);
+        while (notFound && symbolTable != null) {
+            notFound = (symbolTable.lookup("Field_" + id.getText()) == null);
             symbolTable = symbolTable.parent;
         }
-        if(notFound)
-            System.out.printf("Error106 : in line [%d:%d] , Can not find Variable [%s]\n", id.getSymbol().getLine(), id.getSymbol().getCharPositionInLine()+1, id.getText());
+        if (notFound)
+            System.out.printf("Error106: in line [%d:%d], Can not find Variable [%s]\n", id.getSymbol().getLine(), id.getSymbol().getCharPositionInLine() + 1, id.getText());
     }
 
 
@@ -53,15 +52,7 @@ public class Utils {
     }
 
     public static void outOfRange(String identifier, TerminalNode integer, int line, int column, Stack<SymbolTable> scopes){
-        HashMap <String, String> dec = new HashMap<>();
-        SymbolTable symbolTable = scopes.peek();
-        boolean notFound = true;
-        while(notFound){
-            dec = symbolTable.lookup("Field_"+identifier);
-            notFound = (dec == null);
-            symbolTable = symbolTable.parent;
-        }
-
+        HashMap<String, String > dec = deepLookup(identifier, scopes);
         int arraySize = Integer.parseInt(dec.get("size"));
         int indexValue = Integer.parseInt(integer.getText());
 
@@ -70,7 +61,20 @@ public class Utils {
         }
     }
 
-    public static void checkParameter(DustParser.Method_callContext parameter, Stack<SymbolTable> scopes){
-        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-="+scopes.peek().table.keySet());
+    public static void checkParameter(DustParser.Method_callContext parameter, Stack<SymbolTable> scopes) {
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=" + scopes.peek().table.keySet());
+
+    }
+
+    public static HashMap<String, String> deepLookup(String identifier, Stack<SymbolTable> scopes){
+        boolean notFound = true;
+        SymbolTable symbolTable = scopes.peek();
+        HashMap <String, String> dec = new HashMap<>();
+        while(notFound && symbolTable!=null){
+            dec = symbolTable.lookup("Field_"+identifier);
+            notFound = (symbolTable.lookup("Field_"+identifier)==null);
+            symbolTable = symbolTable.parent;
+        }
+        return dec;
     }
 }

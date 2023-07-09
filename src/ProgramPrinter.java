@@ -4,7 +4,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
 
@@ -350,7 +349,6 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterMethod_call(DustParser.Method_callContext ctx) {
-
     }
 
     @Override
@@ -373,15 +371,12 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterPrefixexp(DustParser.PrefixexpContext ctx) {
-
         if(ctx.ID()!=null)
             Utils.detectUndeclaredVariable(ctx.ID(), scopes);
         if(ctx.INTEGER() != null){
             int line = ctx.start.getLine();
             int column = ctx.INTEGER().getSymbol().getCharPositionInLine();
-
             Utils.outOfRange(ctx.prefixexp().getText(), ctx.INTEGER(), line, column, scopes);
-
         }
     }
 
@@ -396,8 +391,9 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterExplist(DustParser.ExplistContext ctx) {
-        for (int i=0; i < ctx.exp().size(); i++)
-            System.out.println(ctx.exp(i).getText());
+//        for (int i=0; i < ctx.exp().size(); i++)
+//            System.out.println(ctx.exp(i).getText());
+        Utils.deepLookup(ctx.getText(), scopes);
     }
 
     @Override
