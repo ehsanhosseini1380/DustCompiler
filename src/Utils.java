@@ -59,8 +59,12 @@ public class Utils {
             notFound = (dec == null);
             symbolTable = symbolTable.parent;
         }
-        if(!Objects.equals(dec.get("size"), integer.getText())){
-            System.out.printf("Error107 : in line [%d:%d] , array index out of range\n", line, column);
+
+        int arraySize = Integer.parseInt(dec.get("size"));
+        int indexValue = Integer.parseInt(integer.getText());
+
+        if (indexValue >= arraySize || 0 > indexValue) { //TODO it's not working when is negative and greater than -3
+            System.out.printf("Error107: in line [%d:%d], array index out of range\n", line, column);
         }
     }
 }

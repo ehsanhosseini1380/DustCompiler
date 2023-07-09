@@ -15,6 +15,7 @@ class Human(Nothing, Nothing2){
         for i in range(0,100,1) {
             print(legs[7])
         }
+        legs[-5]
     }
 
     def int speak(){
@@ -30,6 +31,7 @@ class Human(Nothing, Nothing2){
         for i in hands{
             print(0)
         }
+
         return voice
     }
 
