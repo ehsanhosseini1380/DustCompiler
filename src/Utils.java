@@ -2,6 +2,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Stack;
+
+import gen.DustParser;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class Utils {
@@ -63,8 +65,20 @@ public class Utils {
         int arraySize = Integer.parseInt(dec.get("size"));
         int indexValue = Integer.parseInt(integer.getText());
 
-        if (indexValue >= arraySize || 0 > indexValue) { //TODO it's not working when is negative and greater than -3
+        if (indexValue >= arraySize ) {
             System.out.printf("Error107: in line [%d:%d], array index out of range\n", line, column);
         }
+    }
+
+    public static void checkParameter(DustParser.Method_callContext parameter, Stack<SymbolTable> scopes){
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-="+scopes.peek().table.keySet());
+//        for (int i = 0; i < parameter.varDec().size(); i++) {
+//            System.out.println(parameter.varDec(i).start.getText());
+//            System.out.println(scopes.peek().parent.table.get(String.format("type%d",i+1)));
+//            System.out.println(String.format("type%d",i+1));
+//            parameterList.append(parameter.varDec(i).start.getText()).append(" ").append(parameter.varDec(i).stop.getText());
+//            if (parameter.varDec().size() > 1) parameterList.append(", ");
+//        }
+
     }
 }

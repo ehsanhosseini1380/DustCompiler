@@ -11,15 +11,11 @@ class Human(Nothing, Nothing2){
     Nose nose
 
     def HumanMusic(Nose n){
-        self.nose = n
-        for i in range(0,100,1) {
-            print(legs[7])
-        }
-        legs[-5]
-    }
+        self.nose = n}
 
     def int speak(){
         Voice voice
+        print(legs[7])
         return voice
     }
 

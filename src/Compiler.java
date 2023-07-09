@@ -15,7 +15,7 @@ public class Compiler {
         System.out.println(String.format("%-7s", "ehsan"));
 
 
-        CharStream stream = CharStreams.fromFileName("sample/input2.txt");
+        CharStream stream = CharStreams.fromFileName("sample/inputDoodal.txt");
         DustLexer lexer = new DustLexer(stream);
         TokenStream tokens = new CommonTokenStream(lexer);
         DustParser parser = new DustParser(tokens);
