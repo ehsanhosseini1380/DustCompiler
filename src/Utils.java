@@ -20,7 +20,7 @@ public class Utils {
         if (scopes.peek().lookup(fieldType + "_" + identifier)!=null) {
             fieldType = fieldType.toLowerCase();
             int errorNo = (fieldType.equals("field")) ? 104 : 102;
-            System.out.printf("Error%d : in line [%d:%d] , %s [%s] has been defined already\n", errorNo, line, column, fieldType, identifier);
+            System.out.printf("Error%d : in line [%d:%d], %s [%s] has been defined already\n", errorNo, line, column, fieldType, identifier);
 
             return true;
         }
@@ -30,18 +30,18 @@ public class Utils {
 
     public static void detectUndeclaredClass(TerminalNode className){
         if(!Boolean.parseBoolean(checkDataTypeIsDefined(className.getText()))){
-            System.out.printf("Error101 : in line [%d:%d] , Can not find Class [%s]\n", className.getSymbol().getLine(), className.getSymbol().getCharPositionInLine()+1, className.getText());
+            System.out.printf("Error101 : in line [%d:%d], Can not find Class [%s]\n", className.getSymbol().getLine(), className.getSymbol().getCharPositionInLine()+1, className.getText());
         }
     }
 
 
     public static void reportDuplicateClassError(String identifier, int line, int column){
-        System.out.printf("Error103 : in line [%d:%d] , class [%s] has been defined already\n", line, column, identifier);
+        System.out.printf("Error103 : in line [%d:%d], class [%s] has been defined already\n", line, column, identifier);
     }
 
     public static void detectConstructorError(String className, String constructorName, int line, int column){
         if (!Objects.equals(className, constructorName)){
-            System.out.printf("Error105 : in line [%d:%d] , constructor name mismatch\n", line, column);
+            System.out.printf("Error105 : in line [%d:%d], constructor name mismatch\n", line, column);
         }
     }
 
