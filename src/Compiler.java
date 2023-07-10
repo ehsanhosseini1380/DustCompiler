@@ -26,7 +26,7 @@ public class Compiler {
 //        ProgramPrinter listener = new ProgramPrinter();
 //        phase 2:
 //        ProgramPrinter_phase2 listener=new ProgramPrinter_phase2();
-        //        phase 3, 4:
+//        phase 3, 4:
         ProgramPrinter listener=new ProgramPrinter();
         walker.walk(listener, tree);
         printTreeBFS(SymbolTable.root);

@@ -2,5 +2,6 @@ class Human{
     Human[5] legs
     def void jashdksad(){
         legs[3] = 2
+        ss(asdasd, asdrhqi, akdjshasd)
     }
 }

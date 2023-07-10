@@ -4,7 +4,7 @@ import Voice
 class Human(Nothing, Nothing2){
     Nose nose
     Hand[2] hands
-    Leg[2] legs
+    Leg[4] legs
     int calories
     bool isHungryq
     Food newFood
@@ -12,38 +12,27 @@ class Human(Nothing, Nothing2){
 
     def HumanMusic(Nose n){
         self.nose = n
-        for i in range(0,100,1) {
-            print(legs[7])
-        }
     }
 
-    def int speak(){
+    def int speak(Nose cock, int b){
         Voice voice
+        print(legs[7])
         return voice
     }
 
     def void main(){
     }
 
-    def Voice speak(){
-        Voice voice
-        for i in hands{
-            print(0)
-        }
-        return voice
-    }
 
     def void eat(Food food, int c){
+        Nose b
+        int g
+        speak(b)
         calories += c
         newFood = food
         Drink water
-
         while(self.isHungry){
             Food newFood = Food()
-            if(true){
-                int a
-            }
-            eat(newFood)
             self.isHungry = self.checkIsHungry()
         }
     }
