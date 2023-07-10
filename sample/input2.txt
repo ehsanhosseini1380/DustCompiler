@@ -9,25 +9,27 @@ class Human(Nothing, Nothing2){
     bool isHungryq
     Food newFood
     Nose nose
-
-    def HumanMusic(Nose n){
-        self.nose = n
-    }
-
     def int speak(Nose cock, int b){
         Voice voice
         print(legs[7])
         return voice
     }
-
-    def void main(){
+    def Human (Nose n,float ccccc){
+        int cock=speak(n,ccccc)
+        self.nose = cock
     }
 
 
-    def void eat(Food food, int c){
+
+    def void main(){
+
+    }
+
+
+    def void eat(Food food, Food c){
         Nose b
         int g
-        speak(b)
+        speak(c,b)
         calories += c
         newFood = food
         Drink water
