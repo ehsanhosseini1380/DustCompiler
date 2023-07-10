@@ -165,30 +165,27 @@ public class ProgramPrinter implements DustListener {
 
         StringBuilder parameterList = new StringBuilder();
         HashMap<String,String> currentProperties=new HashMap<>();
-
         if(ctx.parameter().size() != 0){
             int index = 0;
             for (var entry: ctx.parameter(0).varDec()){
+                HashMap<String,String> newScopeProperties=new HashMap<>();
                 index++;
-                String dataType;
-                String fullDataType;
                 if(entry.CLASSNAME() == null) {
-                    fullDataType = entry.TYPE().toString()+", isDefined: True)";
+                    newScopeProperties.put("type", entry.TYPE().toString());
+                    newScopeProperties.put("isDefined", "True");
                     currentProperties.put(String.format("type%s",index),entry.TYPE().toString());
                 }
                 else {
-                    dataType = entry.CLASSNAME().toString();
-                    fullDataType = String.format("classType= %s, isDefined= %s)", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
+                    newScopeProperties.put("type", entry.CLASSNAME().toString());
+                    newScopeProperties.put("isDefined", Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
                     currentProperties.put(String.format("type%s",index),entry.CLASSNAME().toString());
                 }
-                HashMap<String,String> newScopeProperties=new HashMap<>();
                 newScopeProperties.put("name", entry.ID().toString());
-                newScopeProperties.put("type",fullDataType);
                 newScopeProperties.put("index",String.valueOf(index));
                 newScope.insert("Field_"+entry.ID(), newScopeProperties);
-                parameterList.append(String.format("[(type: %s, (index: %d)],", fullDataType, index));
+//                parameterList.append(String.format("[(type: %s, (index: %d)],", fullDataType, index));
             }
-            parameterList.deleteCharAt(parameterList.length()-1).append(']');
+//            parameterList.deleteCharAt(parameterList.length()-1).append(']');
         }
 
         String key = "Method_"+identifier;
