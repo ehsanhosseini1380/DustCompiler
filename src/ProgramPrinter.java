@@ -389,7 +389,8 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterExplist(DustParser.ExplistContext ctx) {
-         Utils.checkParameter(ctx,ctx.parent.parent.getChild(0).getText(),scopes);
+        int line = ctx.start.getLine();
+         Utils.checkParameter(ctx,ctx.parent.parent.getChild(0).getText(), line,scopes);
     }
 
     @Override

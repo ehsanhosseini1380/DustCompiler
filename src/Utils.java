@@ -55,22 +55,24 @@ public class Utils {
         }
     }
 
-    public static void checkParameter(DustParser.ExplistContext ctx,String methodName ,Stack<SymbolTable> scopes) {
+    public static void checkParameter(DustParser.ExplistContext ctx,String methodName, int line ,Stack<SymbolTable> scopes) {
         HashMap<String,String> methodProperties=deepLookup(String.format("Method_%s",methodName),scopes);
         if(methodProperties == null){
         }
         else{
             if (ctx.exp().size() == Integer.parseInt(methodProperties.get("paramCount"))){
+                System.out.println(ctx.exp().size());
+                System.out.println(Integer.parseInt(methodProperties.get("paramCount")));
                 for(int i = 0; i < ctx.exp().size(); i++){
                     HashMap<String,String> paramProperties=deepLookup(String.format("Field_%s",ctx.exp(i).getText()),scopes);
                     if(!paramProperties.get("type").equals(methodProperties.get(String.format("type%d",i+1)))) {
-                        System.out.println("cockplasht");
+                        System.out.printf("Error102: in line [%d], method parameter mismatch\n", line);
                     }
 
                 }
             }
 
-            else{ System.out.println("sage pir");
+            else{ System.out.printf("Error103: in line [%d], this method expext %d parameters\n", line, Integer.parseInt(methodProperties.get("paramCount")));
             }
         }
     }
