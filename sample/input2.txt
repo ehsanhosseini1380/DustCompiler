@@ -14,7 +14,7 @@ class Human(Nothing, Nothing2){
         self.nose = n
     }
 
-    def int speak(Nose cock){
+    def int speak(Nose cock, int b){
         Voice voice
         print(legs[7])
         return voice
@@ -26,6 +26,7 @@ class Human(Nothing, Nothing2){
 
     def void eat(Food food, int c){
         Nose b
+        int g
         speak(b)
         calories += c
         newFood = food

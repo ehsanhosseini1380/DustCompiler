@@ -57,15 +57,20 @@ public class Utils {
 
     public static void checkParameter(DustParser.ExplistContext ctx,String methodName ,Stack<SymbolTable> scopes) {
         HashMap<String,String> methodProperties=deepLookup(String.format("Method_%s",methodName),scopes);
-        if(methodProperties== null){
+        if(methodProperties == null){
+        }
+        else{
+            if (ctx.exp().size() == Integer.parseInt(methodProperties.get("paramCount"))){
+                for(int i = 0; i < ctx.exp().size(); i++){
+                    HashMap<String,String> paramProperties=deepLookup(String.format("Field_%s",ctx.exp(i).getText()),scopes);
+                    if(!paramProperties.get("type").equals(methodProperties.get(String.format("type%d",i+1)))) {
+                        System.out.println("cockplasht");
+                    }
 
-        }else{
-            for(int i = 0; i < ctx.exp().size(); i++){
-                HashMap<String,String> paramProperties=deepLookup(String.format("Field_%s",ctx.exp(i).getText()),scopes);
-                if(!paramProperties.get("type").equals(methodProperties.get(String.format("type%d",i+1)))) {
-                    System.out.println("cockplasht");
                 }
+            }
 
+            else{ System.out.println("sage pir");
             }
         }
     }
