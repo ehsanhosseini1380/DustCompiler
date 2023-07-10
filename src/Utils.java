@@ -41,7 +41,7 @@ public class Utils {
 
     public static void detectConstructorError(String className, String constructorName, int line, int column){
         if (!Objects.equals(className, constructorName)){
-            System.out.printf("Error105 : in line [%d:%d] , constructor name missmatch\n", line, column);
+            System.out.printf("Error105 : in line [%d:%d] , constructor name mismatch\n", line, column);
         }
     }
 
@@ -61,8 +61,6 @@ public class Utils {
         }
         else{
             if (ctx.exp().size() == Integer.parseInt(methodProperties.get("paramCount"))){
-                System.out.println(ctx.exp().size());
-                System.out.println(Integer.parseInt(methodProperties.get("paramCount")));
                 for(int i = 0; i < ctx.exp().size(); i++){
                     HashMap<String,String> paramProperties=deepLookup(String.format("Field_%s",ctx.exp(i).getText()),scopes);
                     if(!paramProperties.get("type").equals(methodProperties.get(String.format("type%d",i+1)))) {
@@ -70,7 +68,7 @@ public class Utils {
                     }
                 }
             }
-            else{ System.out.printf("Error108 : in line [%d], this method expext %d parameters\n", line, Integer.parseInt(methodProperties.get("paramCount")));
+            else{ System.out.printf("Error108 : in line [%d], this method expects %d parameters\n", line, Integer.parseInt(methodProperties.get("paramCount")));
             }
         }
     }
