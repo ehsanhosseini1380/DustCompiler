@@ -217,23 +217,21 @@ public class ProgramPrinter implements DustListener {
             parameterList.append("[parameter list: ");
             for (var entry: ctx.parameter(0).varDec()){
                 index++;
-                String dataType;
-                String fullDataType;
+                HashMap<String,String> properties=new HashMap<>();
                 if(entry.CLASSNAME() == null) {
-                    dataType = fullDataType = entry.TYPE().toString()+", isDefined: True";
+                    properties.put("type", entry.TYPE().toString());
+                    properties.put("isDefined", "True");
                 }
                 else {
-                    dataType = entry.CLASSNAME().toString();
-                    fullDataType = String.format("[classType= %s, isDefined= %s]", dataType, Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
+                    properties.put("type", entry.CLASSNAME().toString());
+                    properties.put("isDefined", Utils.checkDataTypeIsDefined(entry.CLASSNAME().toString()));
                 }
-                HashMap<String,String> properties=new HashMap<>();
                 properties.put("name", entry.ID().toString());
-                properties.put("type",fullDataType);
                 properties.put("index",String.valueOf(index));
                 newScope.insert("Field_"+entry.ID(), properties);
-                parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
+//                parameterList.append(String.format("[type: %s, index: %d],", dataType, index));
             }
-            parameterList.deleteCharAt(parameterList.length()-1).append(']');
+//            parameterList.deleteCharAt(parameterList.length()-1).append(']');
         }
 
         String key = "Constructor_"+identifier;
