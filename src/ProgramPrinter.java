@@ -23,11 +23,12 @@ public class ProgramPrinter implements DustListener {
 
     @Override
     public void enterImportclass(DustParser.ImportclassContext ctx) {
+        int line = ctx.start.getLine();
+        int column = ctx.CLASSNAME().getSymbol().getCharPositionInLine();
         String identifier = ctx.CLASSNAME().toString();
+        Utils.searchClass(identifier,"./sample/",line,column);
         String key = "import_" + identifier;
         if(Boolean.parseBoolean(Utils.checkDataTypeIsDefined(ctx.CLASSNAME().toString()))){
-            int line = ctx.start.getLine();
-            int column = ctx.CLASSNAME().getSymbol().getCharPositionInLine();
             Utils.reportDuplicateClassError(identifier, line, column);
             key = String.format("%s_%s_%s", identifier, line, column);
         }

@@ -4,6 +4,7 @@ import java.util.Stack;
 
 import gen.DustParser;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import java.io.File;
 
 public class Utils {
     public static String checkDataTypeIsDefined(String className){
@@ -84,5 +85,21 @@ public class Utils {
         }
         if(notFound)return null;
         else return dec;
+    }
+    public static void searchClass(String className, String location,int line,int column) {
+        File folder = new File(location);
+        File[] files = folder.listFiles();
+
+        boolean found = false;
+
+        for (File file : files) {
+            if (file.isFile() && file.getName().equals(className + ".java")) {
+                found = true;
+            }
+        }
+
+        if (!found) {
+            System.err.println(String.format("Error109 : in line [%d:%d] Can not find Class %s ",line,column,className));
+        }
     }
 }
